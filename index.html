@@ -99,6 +99,8 @@ nav.scrolled{border-color:var(--peach-pale);}
 .product-card.esgotado .product-image{filter:grayscale(60%);opacity:.7;}
 .product-card.esgotado .prod-name{color:var(--light);}
 .badge-esgotado{position:absolute;top:14px;left:14px;background:var(--dark);color:var(--white);font-size:8px;letter-spacing:3px;text-transform:uppercase;padding:5px 10px;z-index:2;}
+.avise-btn{width:100%;font-size:9px;letter-spacing:3px;text-transform:uppercase;background:none;border:1px solid var(--dark);color:var(--dark);padding:10px;cursor:pointer;font-family:'Jost',sans-serif;font-weight:300;transition:all .2s;margin-top:8px;}
+.avise-btn:hover{background:var(--dark);color:var(--white);}
 
 
 /* FAQ */
@@ -212,6 +214,14 @@ footer{background:var(--dark);padding:80px 60px 40px;}
   body{cursor:auto;}.cursor,.cursor-ring{display:none;}
 }
 </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2FLB592EN9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-2FLB592EN9');
+</script>
 </head>
 <body>
 
@@ -521,7 +531,7 @@ function renderProducts(filter) {
             : `<div class="prod-placeholder-wrap"><div class="prod-icon">◉</div><div class="prod-placeholder-text">${p.nome}</div></div>`
           }
         </div>
-        ${!esgotado ? `<div class="overlay"><button class="overlay-btn" onclick="addToCart(${idx})">+ Adicionar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">&#128247; Ver foto</button>` : ''}</div>` : `<div class="overlay" style="opacity:1;background:rgba(42,31,26,.3);">${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')">&#128247; Ver foto</button>` : ''}</div>`}
+        ${!esgotado ? `<div class="overlay"><button class="overlay-btn" onclick="addToCart(${idx})">+ Adicionar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">&#128247; Ver foto</button>` : ''}</div>` : `<div class="overlay" style="opacity:1;background:rgba(42,31,26,.3);"><button class="overlay-btn" onclick="aviseMeWhatsapp('${p.nome.replace(/'/g,"\\'")}')">&#9825; Me avise quando chegar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">&#128247; Ver foto</button>` : ''}</div>`}
         ${badgeEstoque || (badge ? `<div class="prod-badge ${isKit?'kit':''}">${badge}</div>` : '')}
       </div>
       <div class="product-info">
@@ -532,6 +542,7 @@ function renderProducts(filter) {
           <div class="prod-price">${fmt(p.preco)}</div>
           <button class="prod-add" onclick="addToCart(${idx})" ${esgotado?'disabled title="Esgotado"':''}>+</button>
         </div>
+        ${esgotado ? `<button class="avise-btn" onclick="aviseMeWhatsapp('${p.nome.replace(/'/g,"\\'")}')">&#9825; Me avise quando chegar</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -632,6 +643,14 @@ function openLightbox(url, nome) {
   document.getElementById('lightboxNome').textContent = nome;
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
+  // Google Analytics — evento ver foto
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'ver_foto', {
+      event_category: 'produto',
+      event_label: nome,
+      value: 1
+    });
+  }
 }
 function closeLightbox(e) {
   if (e && e.target === document.getElementById('lightboxImg')) return;
@@ -645,6 +664,11 @@ function toggleZoom(e) {
   img.classList.toggle('zoomed');
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+function aviseMeWhatsapp(nomeProduto) {
+  const msg = `Oi! Gostaria de ser avisada quando o produto *${nomeProduto}* voltar ao estoque. &#9825;`;
+  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+}
 
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
