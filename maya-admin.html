@@ -366,7 +366,9 @@ function parseCSV(text) {
     headers.forEach((h,i) => obj[h] = (vals[i]||'').trim());
     if (obj['preco'] === undefined) obj.preco = obj['preço'] || '';
     if (obj['variacoes'] === undefined) obj.variacoes = obj['variações'] || '';
-    obj.estoque = obj.estoque !== undefined && obj.estoque !== '' ? parseInt(obj.estoque) : -1;
+    const estoqueRaw = obj.estoque ?? obj['estoque'] ?? '';
+    const estoqueParsed = parseInt(String(estoqueRaw).trim());
+    obj.estoque = !isNaN(estoqueParsed) ? estoqueParsed : -1;
     return obj;
   }).filter(p => p.nome);
 }
@@ -448,7 +450,10 @@ function renderKPIs(p) {
   const totalPedidos = calcTotalPedidos(vendidos);
 
   // Pecas disponiveis e vendidas
-  const pecasDisponiveis = p.filter(x => x.estoque !== 0 && x.estoque !== -1).length;
+  const pecasDisponiveis = p.filter(x => {
+    const e = x.estoque;
+    return !isNaN(e) && e !== 0 && e !== -1;
+  }).length;
   const pecasVendidas = vendidos.length;
 
   // Vendidas por categoria
@@ -502,7 +507,7 @@ function renderFinanceiro(p) {
 }
 
 function renderChartVendas(p) {
-  const vendidos = p.filter(x => x.estoque === 0 && (x.data_venda || x.data_entrada));
+  const vendidos = p.filter(x => x.estoque === 0 && x.data_venda);
   if (!vendidos.length) {
     if (chartVendasInstance) { chartVendasInstance.destroy(); chartVendasInstance = null; }
     const ctx = document.getElementById('chartVendas').getContext('2d');
@@ -525,7 +530,7 @@ function renderChartVendas(p) {
   }
 
   vendidos.forEach(x => {
-    const dateStr = x.data_venda || x.data_entrada;
+    const dateStr = x.data_venda;
     const d = parseDate(dateStr);
     if (!d || d < inicio) return;
     const key = d.toISOString().split('T')[0];
