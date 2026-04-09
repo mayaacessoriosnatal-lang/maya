@@ -462,6 +462,16 @@ async function loadData() {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Erro ao buscar planilha');
     allProducts = parseCSV(await res.text());
+  
+  // Debug: primeiros produtos com data_venda
+  const comVenda = allProducts.filter(x => x.data_venda && x.data_venda.trim());
+  console.log('[Maya Admin] Com data_venda:', comVenda.length);
+  comVenda.slice(0,3).forEach((x,i) => {
+    const d = parseDate(x.data_venda);
+    const key = d ? d.toISOString().split('T')[0] : 'ERRO_PARSE';
+    console.log('[Maya Admin] ex' + i + ':', JSON.stringify({nome:x.nome, data_venda:x.data_venda, parsed:key, estoque:x.estoque}));
+  });
+
   } catch(e) {
     document.getElementById('tabelaProdutos').innerHTML = `<tr><td colspan="11"><div class="state-msg"><p>Erro: ${e.message}</p></div></td></tr>`;
     document.getElementById('lastUpdate').textContent = 'Erro';
