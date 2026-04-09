@@ -355,20 +355,36 @@ function parseLine(line) {
   return result;
 }
 
+function normalizeHeader(h) {
+  return h.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-  const headers = parseLine(lines[0]).map(h => h.trim().toLowerCase()
-    .replace('preco','preco').replace(/pre[cç]o/,'preco')
-    .replace(/varia[cç][oõ]es/,'variacoes'));
+  const rawHeaders = parseLine(lines[0]);
+  const headers = rawHeaders.map(normalizeHeader);
+
+  // Debug: mostra colunas no console
+  console.log('[Maya Admin] Colunas detectadas:', headers);
+
   return lines.slice(1).map(line => {
     const vals = parseLine(line);
     const obj = {};
     headers.forEach((h,i) => obj[h] = (vals[i]||'').trim());
-    if (obj['preco'] === undefined) obj.preco = obj['preço'] || '';
-    if (obj['variacoes'] === undefined) obj.variacoes = obj['variações'] || '';
-    const estoqueRaw = obj.estoque ?? obj['estoque'] ?? '';
-    const estoqueParsed = parseInt(String(estoqueRaw).trim());
-    obj.estoque = !isNaN(estoqueParsed) ? estoqueParsed : -1;
+
+    // estoque: 0 = vendido, 1 ou mais = disponivel, vazio = disponivel
+    const estoqueRaw = obj.estoque ?? '';
+    if (estoqueRaw === '' || estoqueRaw === undefined) {
+      obj.estoque = 1;
+    } else {
+      const parsed = parseInt(estoqueRaw);
+      obj.estoque = isNaN(parsed) ? 1 : parsed;
+    }
     return obj;
   }).filter(p => p.nome);
 }
@@ -450,10 +466,7 @@ function renderKPIs(p) {
   const totalPedidos = calcTotalPedidos(vendidos);
 
   // Pecas disponiveis e vendidas
-  const pecasDisponiveis = p.filter(x => {
-    const e = x.estoque;
-    return !isNaN(e) && e !== 0 && e !== -1;
-  }).length;
+  const pecasDisponiveis = p.filter(x => x.estoque !== 0).length;
   const pecasVendidas = vendidos.length;
 
   // Vendidas por categoria
@@ -507,7 +520,7 @@ function renderFinanceiro(p) {
 }
 
 function renderChartVendas(p) {
-  const vendidos = p.filter(x => x.estoque === 0 && x.data_venda);
+  const vendidos = p.filter(x => x.estoque === 0 && (x.data_venda || x.data_entrada));
   if (!vendidos.length) {
     if (chartVendasInstance) { chartVendasInstance.destroy(); chartVendasInstance = null; }
     const ctx = document.getElementById('chartVendas').getContext('2d');
@@ -530,7 +543,7 @@ function renderChartVendas(p) {
   }
 
   vendidos.forEach(x => {
-    const dateStr = x.data_venda;
+    const dateStr = x.data_venda || x.data_entrada;
     const d = parseDate(dateStr);
     if (!d || d < inicio) return;
     const key = d.toISOString().split('T')[0];
@@ -642,7 +655,7 @@ function renderInsights(p) {
   document.getElementById('insRiscoDesc').textContent = risco.length > 0 ? `Em estoque ha mais de 20 dias sem vender` : 'Todos os produtos estao girando bem';
 
   // Receita potencial
-  const potencial = ativos.reduce((s,x)=>s+(parseFloat(x.preco)||0)*Math.max(1,x.estoque===-1?1:x.estoque),0);
+  const potencial = ativos.reduce((s,x)=>s+(parseFloat(x.preco)||0)*Math.max(1,x.estoque<1?1:x.estoque),0);
   document.getElementById('insPotencial').textContent = fmt(potencial);
   document.getElementById('insPotencialDesc').textContent = `Se vender todo o estoque atual`;
 }
@@ -659,9 +672,8 @@ function gerarSKU(p) {
 }
 
 function statusBadge(estoque) {
-  if (estoque === 0) return '<span class="badge badge-esgotado">Esgotado</span>';
-  if (estoque === 1) return '<span class="badge badge-ultimas">Ultima un.</span>';
-  if (estoque === -1) return '<span class="badge badge-ativo">Sem controle</span>';
+  if (estoque === 0) return '<span class="badge badge-esgotado">Vendido</span>';
+  if (estoque === 1) return '<span class="badge badge-ultimas">Disponivel</span>';
   return '<span class="badge badge-ativo">Ativo</span>';
 }
 
@@ -691,7 +703,7 @@ function renderTabela(p) {
       <td>${fmt(x.preco)}</td>
       <td>${x.custo ? fmt(x.custo) : '<span style="color:var(--light);font-size:10px">&#8212;</span>'}</td>
       <td>${margem !== null ? `<div class="margem-wrap"><div class="margem-bar-bg"><div class="margem-bar-fill" style="width:${Math.min(100,Math.round(margem))}%"></div></div><div class="margem-val">${fmtPct(margem)}</div></div>` : '<span style="color:var(--light);font-size:10px">sem custo</span>'}</td>
-      <td>${x.estoque === -1 ? '<span style="color:var(--light)">&#8212;</span>' : x.estoque}</td>
+      <td>${x.estoque === 0 ? '<span style="color:var(--light)">&#8212;</span>' : x.estoque}</td>
       <td>${statusBadge(x.estoque)}</td>
       <td style="font-size:10px;color:var(--mid)">${x.data_entrada||'&#8212;'}</td>
       <td style="font-size:10px;color:var(--mid)">${x.data_venda||'&#8212;'}</td>
