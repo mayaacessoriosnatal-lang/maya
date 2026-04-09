@@ -563,7 +563,7 @@ function renderFinanceiro(p) {
 }
 
 function renderChartVendas(p) {
-  const vendidos = p.filter(x => x.estoque === 0 && (x.data_venda || x.data_entrada));
+  const vendidos = p.filter(x => x.data_venda && x.data_venda.trim() !== '');
   if (!vendidos.length) {
     if (chartVendasInstance) { chartVendasInstance.destroy(); chartVendasInstance = null; }
     const ctx = document.getElementById('chartVendas').getContext('2d');
@@ -586,7 +586,7 @@ function renderChartVendas(p) {
   }
 
   vendidos.forEach(x => {
-    const dateStr = x.data_venda || x.data_entrada;
+    const dateStr = x.data_venda; // só usa data_venda (já filtrado)
     const d = parseDate(dateStr);
     if (!d || d < inicio) return;
     const key = d.toISOString().split('T')[0];
