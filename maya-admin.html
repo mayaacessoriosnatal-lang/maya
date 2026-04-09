@@ -299,6 +299,41 @@ tbody td{font-size:12px;color:var(--dark);padding:16px 20px;vertical-align:middl
   <!-- TABELA -->
   <div class="section">
     <div class="section-title">Todos os Produtos</div>
+
+    <!-- FILTROS -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+      <input id="filtroNome" type="text" placeholder="Buscar produto..." oninput="aplicarFiltros()"
+        style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--dark);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;outline:none;width:180px;">
+      <select id="filtroStatus" onchange="aplicarFiltros()"
+        style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--dark);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;outline:none;">
+        <option value="">Todos os status</option>
+        <option value="disponivel">Disponivel</option>
+        <option value="vendido">Vendido</option>
+      </select>
+      <select id="filtroCategoria" onchange="aplicarFiltros()"
+        style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--dark);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;outline:none;">
+        <option value="">Todas as categorias</option>
+        <option value="brinco">Brincos</option>
+        <option value="colar">Colares</option>
+        <option value="anel">Aneis</option>
+        <option value="pulseira">Pulseiras</option>
+      </select>
+      <select id="filtroOrdem" onchange="aplicarFiltros()"
+        style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--dark);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;outline:none;">
+        <option value="entrada_desc">Mais recentes primeiro</option>
+        <option value="entrada_asc">Mais antigos primeiro</option>
+        <option value="status">Por status (vendido primeiro)</option>
+        <option value="margem_desc">Maior margem</option>
+        <option value="margem_asc">Menor margem</option>
+        <option value="preco_desc">Maior preco</option>
+        <option value="preco_asc">Menor preco</option>
+        <option value="giro_asc">Giro mais rapido</option>
+        <option value="giro_lento">Giro mais lento</option>
+        <option value="nome_az">Nome A–Z</option>
+      </select>
+      <span id="filtroContagem" style="font-size:10px;color:var(--mid);letter-spacing:1px;margin-left:4px;"></span>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -341,8 +376,16 @@ const fmtPct = v => isNaN(v) ? '&#8212;' : Math.round(v) + '%';
 
 function parseDate(str) {
   if (!str) return null;
-  if (str.includes('/')) { const [d,m,y] = str.split('/'); return new Date(`${y}-${m}-${d}`); }
-  const d = new Date(str); return isNaN(d) ? null : d;
+  // Sempre constroi com horário local (noon) para evitar bug de fuso UTC
+  if (str.includes('/')) {
+    const [d,m,y] = str.split('/');
+    return new Date(parseInt(y), parseInt(m)-1, parseInt(d), 12, 0, 0);
+  }
+  if (str.includes('-')) {
+    const [y,m,d] = str.split('-');
+    return new Date(parseInt(y), parseInt(m)-1, parseInt(d), 12, 0, 0);
+  }
+  return null;
 }
 
 function parseLine(line) {
@@ -429,7 +472,7 @@ async function loadData() {
   renderChartVendas(allProducts);
   renderAlertas(allProducts);
   renderInsights(allProducts);
-  renderTabela(allProducts);
+  aplicarFiltros(); // respeita filtros ativos e renderiza tabela
   document.getElementById('lastUpdate').textContent = 'Atualizado as ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
 
@@ -710,6 +753,45 @@ function renderTabela(p) {
       <td>${giroBadge(dias, vendido)}</td>
     </tr>`;
   }).join('');
+}
+
+function aplicarFiltros() {
+  const nome = document.getElementById('filtroNome').value.toLowerCase().trim();
+  const status = document.getElementById('filtroStatus').value;
+  const categoria = document.getElementById('filtroCategoria').value;
+  const ordem = document.getElementById('filtroOrdem').value;
+
+  let lista = [...allProducts];
+
+  // Filtros
+  if (nome) lista = lista.filter(x => x.nome.toLowerCase().includes(nome));
+  if (status === 'vendido')   lista = lista.filter(x => x.estoque === 0);
+  if (status === 'disponivel') lista = lista.filter(x => x.estoque !== 0);
+  if (categoria) lista = lista.filter(x => x.categoria?.toLowerCase() === categoria);
+
+  // Ordenação
+  const giroVal = x => {
+    const vendido = x.estoque === 0;
+    const d = calcGiro(x.data_entrada, vendido ? x.data_venda : null);
+    return d === null ? 9999 : d;
+  };
+  const margemVal = x => calcMargem(x.preco, x.custo) ?? -1;
+
+  switch(ordem) {
+    case 'entrada_desc': lista.sort((a,b) => (parseDate(b.data_entrada)||0) - (parseDate(a.data_entrada)||0)); break;
+    case 'entrada_asc':  lista.sort((a,b) => (parseDate(a.data_entrada)||0) - (parseDate(b.data_entrada)||0)); break;
+    case 'status':       lista.sort((a,b) => a.estoque - b.estoque); break;
+    case 'margem_desc':  lista.sort((a,b) => margemVal(b) - margemVal(a)); break;
+    case 'margem_asc':   lista.sort((a,b) => margemVal(a) - margemVal(b)); break;
+    case 'preco_desc':   lista.sort((a,b) => (parseFloat(b.preco)||0) - (parseFloat(a.preco)||0)); break;
+    case 'preco_asc':    lista.sort((a,b) => (parseFloat(a.preco)||0) - (parseFloat(b.preco)||0)); break;
+    case 'giro_asc':     lista.sort((a,b) => giroVal(a) - giroVal(b)); break;
+    case 'giro_lento':   lista.sort((a,b) => giroVal(b) - giroVal(a)); break;
+    case 'nome_az':      lista.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR')); break;
+  }
+
+  document.getElementById('filtroContagem').textContent = lista.length + ' produto' + (lista.length !== 1 ? 's' : '');
+  renderTabela(lista);
 }
 
 loadData();
