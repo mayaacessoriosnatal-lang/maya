@@ -612,32 +612,33 @@ function renderChartVendas(p) {
   if (chartVendasInstance) chartVendasInstance.destroy();
   const ctx = document.getElementById('chartVendas').getContext('2d');
   chartVendasInstance = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: labels.map(l => { const d = new Date(l); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }),
+      labels: labels.map(l => { const d = new Date(l + 'T12:00:00'); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }),
       datasets: [
         {
           label: 'Receita diaria (R$)',
           data: valores,
+          backgroundColor: 'rgba(232,133,106,0.7)',
           borderColor: '#E8856A',
-          backgroundColor: 'rgba(232,133,106,0.08)',
-          borderWidth: 2,
-          pointRadius: 3,
-          fill: true,
-          tension: 0.4,
+          borderWidth: 1,
+          borderRadius: 4,
           yAxisID: 'y',
+          order: 2,
         },
         {
           label: 'Receita acumulada (R$)',
           data: acumulado,
+          type: 'line',
           borderColor: '#C45E42',
           backgroundColor: 'transparent',
-          borderWidth: 1.5,
+          borderWidth: 2,
           borderDash: [4,4],
           pointRadius: 0,
           fill: false,
-          tension: 0.4,
+          tension: 0,
           yAxisID: 'y1',
+          order: 1,
         }
       ]
     },
