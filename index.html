@@ -313,21 +313,11 @@ footer{background:var(--dark);padding:80px 60px 40px;}
 
   <div class="faq-item">
     <button class="faq-q" onclick="toggleFaq(this)">
-      Posso usar no dia a dia ou é só para ocasiões especiais?
-      <span class="faq-icon">+</span>
-    </button>
-    <div class="faq-a"><div class="faq-a-inner">
-      As peças Maya foram escolhidas justamente para o uso cotidiano — leves, versáteis e com estética que combina com looks do dia a dia. Mas quanto mais cuidado, mais tempo duram.
-    </div></div>
-  </div>
-
-  <div class="faq-item">
-    <button class="faq-q" onclick="toggleFaq(this)">
       Posso parcelar?
       <span class="faq-icon">+</span>
     </button>
     <div class="faq-a"><div class="faq-a-inner">
-      Sim. Parcelamos em até 3x sem juros via Pix, cartão ou transferência. Consulte as condições no momento do pedido pelo WhatsApp.
+      Sim. Parcelamos em até 3x sem juros com parcela mínima de R$ 50,00 via Pix, cartão ou transferência. Consulte as condições no momento do pedido pelo WhatsApp.
     </div></div>
   </div>
 
@@ -523,7 +513,8 @@ function renderProducts(filter) {
       if (dB) return 1;
       return 0;
     });
-  document.getElementById('productCount').textContent = `${list.length} ${list.length === 1 ? 'peça' : 'peças'}`;
+  const disponiveis = list.filter(p => p.estoque !== 0).length;
+  document.getElementById('productCount').textContent = `${disponiveis} ${disponiveis === 1 ? 'peça' : 'peças'}`;
 
   if (!list.length) {
     document.getElementById('productsGrid').innerHTML = `<div class="error-msg">Nenhum produto nesta categoria ainda.</div>`;
