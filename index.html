@@ -247,6 +247,7 @@ footer{background:var(--dark);padding:80px 60px 40px;}
     <li><a href="#catalogo" onclick="setFilter('anel')">Anéis</a></li>
     <li><a href="#catalogo" onclick="setFilter('colar')">Colares</a></li>
     <li><a href="#catalogo" onclick="setFilter('bracelet')">Braceletes</a></li>
+    <li><a href="#catalogo" onclick="setFilter('pulseira')">Pulseiras</a></li>
   </ul>
   <button class="nav-cart" onclick="toggleCart()">Carrinho <span class="cart-count" id="cartCount">0</span></button>
 </nav>
@@ -261,7 +262,7 @@ footer{background:var(--dark);padding:80px 60px 40px;}
   <div class="hero-right" id="heroRight">
     <img class="hero-right-img" id="heroBannerImg" src="" alt="Maya Acessórios" style="display:none;">
     <div class="hero-ornament" id="heroOrnament">MAYA</div>
-    <div class="hero-tag">Natal, RN ✦ 2025</div>
+    <div class="hero-tag">Natal, RN ✦ 2026</div>
   </div>
 </section>
 
@@ -277,6 +278,7 @@ footer{background:var(--dark);padding:80px 60px 40px;}
       <button class="filter-btn" onclick="applyFilter('anel',this)">Anéis</button>
       <button class="filter-btn" onclick="applyFilter('colar',this)">Colares</button>
       <button class="filter-btn" onclick="applyFilter('bracelet',this)">Braceletes</button>
+      <button class="filter-btn" onclick="applyFilter('pulseira',this)">Pulseiras</button>
     </div>
     <div class="products-grid" id="productsGrid">
       <div class="loading"><div class="loading-logo">MAYA</div></div>
@@ -358,6 +360,7 @@ footer{background:var(--dark);padding:80px 60px 40px;}
         <li><a href="#" onclick="setFilter('anel')">Anéis</a></li>
         <li><a href="#" onclick="setFilter('colar')">Colares</a></li>
         <li><a href="#" onclick="setFilter('bracelet')">Braceletes</a></li>
+        <li><a href="#" onclick="setFilter('pulseira')">Pulseiras</a></li>
       </ul>
     </div>
     <div>
@@ -370,7 +373,7 @@ footer{background:var(--dark);padding:80px 60px 40px;}
     </div>
   </div>
   <div class="footer-bottom">
-    <div class="footer-copy">© 2025 Maya — Natal, RN</div>
+    <div class="footer-copy">© 2026 Maya — Natal, RN</div>
     <div class="footer-copy">Feito com cuidado ✦</div>
   </div>
 </footer>
@@ -421,7 +424,7 @@ const CONFIG = {
 };
 
 // ── Helpers ─────────────────────────────────────────────────────
-const catLabel = c => ({'brinco':'Brincos','colar':'Colares','bolsa':'Bolsas','kit':'Kit & Combo','anel':'Anéis','bracelet':'Braceletes','pulseira':'Braceletes'}[c?.toLowerCase()] || c || '');
+const catLabel = c => ({'brinco':'Brincos','colar':'Colares','bolsa':'Bolsas','kit':'Kit & Combo','anel':'Anéis','bracelet':'Braceletes','pulseira':'Pulseiras'}[c?.toLowerCase()] || c || '');
 const fmt = v => 'R$ ' + Number(v).toFixed(2).replace('.',',');
 
 // Converte link compartilhado do Drive para link direto de imagem
@@ -742,8 +745,8 @@ function showSocialProof() {
 // primeira aparição após 8s, depois a cada 12s
 setTimeout(() => {
   showSocialProof();
-  setInterval(showSocialProof, 40000);
-}, 20000);
+  setInterval(showSocialProof, 180000);
+}, 30000);
 
 // ── Imagens do site (aba imagens_site) ──────────────────────────
 async function loadSiteImages() {
