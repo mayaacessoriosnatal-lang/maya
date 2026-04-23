@@ -236,6 +236,23 @@ footer{background:var(--dark);padding:80px 60px 40px;}
   gtag('js', new Date());
   gtag('config', 'G-2FLB592EN9');
 </script>
+<!-- Facebook Pixel -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '4681163305539876');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=4681163305539876&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Facebook Pixel -->
 </head>
 <body>
 
@@ -687,6 +704,10 @@ function checkoutWhatsApp() {
   let msg = '✦ *Pedido MAYA*\n\n';
   cart.forEach(i => { msg += `• ${i.name}${i.variation ? ' (' + i.variation + ')' : ''} × ${i.qty} — ${fmt(i.price * i.qty)}\n`; });
   msg += `\n*Total: ${fmt(total)}*\n\nOlá! Gostaria de finalizar esse pedido 🛍`;
+  // Pixel — InitiateCheckout
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'InitiateCheckout', { value: total, currency: 'BRL', num_items: cart.length });
+  }
   window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -720,6 +741,9 @@ function toggleZoom(e) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 function aviseMeWhatsapp(nomeProduto) {
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'Lead', { content_name: nomeProduto });
+  }
   const msg = `Oi! Gostaria de ser avisada quando o produto *${nomeProduto}* voltar ao estoque. &#9825;`;
   window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
