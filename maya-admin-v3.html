@@ -110,6 +110,20 @@ tr:hover td{background:#fbf3ee}
 .copybox{background:#2d221e;color:#ffe5dc;border:1px solid #4d3830;padding:14px;white-space:pre;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.6;max-height:230px}
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;margin-bottom:12px;align-items:end}
 .notice{border-left:3px solid var(--brand);background:#fff5ef;padding:14px 16px;color:var(--muted);font-size:13px;line-height:1.6}
+.crm-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.crm-kpi{background:#fff;border:1px solid var(--line);padding:14px;border-left:3px solid var(--line)}
+.crm-kpi.hot{border-left-color:var(--brand)}
+.crm-kpi.warn{border-left-color:var(--yellow)}
+.crm-kpi.good{border-left-color:var(--green)}
+.crm-kpi .label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--soft);margin-bottom:6px}
+.crm-kpi .value{font-family:Georgia,serif;font-size:24px;line-height:1}
+.crm-kpi .sub{font-size:11px;color:var(--muted);margin-top:6px}
+.crm-split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.crm-list{display:grid;gap:8px}
+.crm-card{border:1px solid var(--line);background:#fff;padding:12px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.crm-card strong{display:block;font-family:Georgia,serif;font-size:15px;font-weight:400}
+.crm-card span{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:3px}
+.crm-card b{font-weight:500;white-space:nowrap}
 .health{display:grid;gap:10px}
 .health-item{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center}
 .bar{height:8px;background:#f1dfd8;overflow:hidden}
@@ -120,8 +134,9 @@ tr:hover td{background:#fbf3ee}
 @media(max-width:1120px){
   .layout{grid-template-columns:1fr}
   .side{position:static;display:grid;grid-template-columns:repeat(4,1fr)}
-  .hero,.grid-2,.grid-3{grid-template-columns:1fr}
+  .hero,.grid-2,.grid-3,.crm-split{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(3,1fr)}
+  .crm-kpis{grid-template-columns:repeat(2,1fr)}
   .form-grid,.form-grid.cols-3,.filters{grid-template-columns:1fr 1fr}
   .field.wide{grid-column:span 2}
   .product-picker{grid-template-columns:1fr 1fr}
@@ -130,7 +145,7 @@ tr:hover td{background:#fbf3ee}
   .topbar{align-items:flex-start;flex-direction:column;padding:16px}
   .layout{padding:16px}
   .side{grid-template-columns:1fr 1fr}
-  .kpis,.quick,.form-grid,.form-grid.cols-3,.filters,.product-picker{grid-template-columns:1fr}
+  .kpis,.crm-kpis,.quick,.form-grid,.form-grid.cols-3,.filters,.product-picker{grid-template-columns:1fr}
   .field.wide{grid-column:span 1}
   .opening h2{font-size:28px}
 }
@@ -153,11 +168,9 @@ tr:hover td{background:#fbf3ee}
 <div class="layout">
   <nav class="side">
     <button class="navbtn active" data-section="visao" onclick="showSection('visao')">Visão geral</button>
-    <button class="navbtn" data-section="cadastro" onclick="showSection('cadastro')">Cadastro</button>
     <button class="navbtn" data-section="vendas" onclick="showSection('vendas')">Vendas + CRM</button>
     <button class="navbtn" data-section="produtos" onclick="showSection('produtos')">Produtos</button>
     <button class="navbtn" data-section="recompra" onclick="showSection('recompra')">Recompra</button>
-    <button class="navbtn" data-section="exportar" onclick="showSection('exportar')">Exportar</button>
   </nav>
 
   <main class="main">
@@ -165,15 +178,15 @@ tr:hover td{background:#fbf3ee}
       <div class="hero">
         <div class="opening">
           <h2>Operação em um painel só.</h2>
-          <p>O V7 lê a aba Produtos, calcula gestão, gera SKU, monta linhas prontas para colar no Sheets e cria registros de venda/cliente para vocês não dependerem de edição manual em cada célula.</p>
+          <p>O V7 lê a aba Produtos, calcula gestão, registra vendas e organiza CRM para vocês acompanharem estoque, recompra e relacionamento sem duplicar cadastro de produto fora da planilha.</p>
         </div>
         <div class="panel">
           <h3>Ações rápidas</h3>
           <div class="quick">
-            <button class="btn" onclick="showSection('cadastro')"><strong>Novo produto</strong><span>SKU + linha de Sheets</span></button>
             <button class="btn" onclick="showSection('vendas')"><strong>Registrar venda</strong><span>Pedido, peças e cliente</span></button>
+            <button class="btn" onclick="showSection('produtos')"><strong>Ver produtos</strong><span>Estoque, giro e status</span></button>
             <button class="btn" onclick="showSection('recompra')"><strong>Comprar de novo</strong><span>Prioridade por giro/margem</span></button>
-            <button class="btn" onclick="showSection('exportar')"><strong>Copiar lotes</strong><span>Produtos e CRM</span></button>
+            <button class="btn" onclick="copySalesCRM()"><strong>Copiar CRM</strong><span>Somente dados da compra</span></button>
           </div>
         </div>
       </div>
@@ -218,54 +231,28 @@ tr:hover td{background:#fbf3ee}
       </div>
     </section>
 
-    <section class="section" id="sec-cadastro">
-      <div class="panel">
-        <h2>Cadastro rápido de produto</h2>
-        <div class="notice">Preencha uma vez, gere SKU único e copie a linha pronta para o Sheets. Se vocês adicionarem uma coluna <b>sku</b> na planilha, o painel passa a usar esse código oficial.</div>
-        <form id="productForm" style="margin-top:18px">
-          <div class="form-grid">
-            <div class="field wide"><label>Nome</label><input id="pNome" placeholder="Ex: Brinco Lua"></div>
-            <div class="field"><label>Categoria</label><select id="pCategoria"><option>Brinco</option><option>Colar</option><option>Anel</option><option>Pulseira</option><option>Bracelet</option><option>Bolsa</option><option>Kit</option></select></div>
-            <div class="field"><label>Variação / Material</label><input id="pVariacao" placeholder="Dourado"></div>
-            <div class="field"><label>Preço</label><input id="pPreco" inputmode="decimal" placeholder="25"></div>
-            <div class="field"><label>Custo</label><input id="pCusto" inputmode="decimal" placeholder="6,76"></div>
-            <div class="field"><label>Estoque</label><input id="pEstoque" type="number" min="0" value="1"></div>
-            <div class="field"><label>Badge</label><select id="pBadge"><option>NOVO</option><option>DESTAQUE</option><option></option></select></div>
-            <div class="field"><label>Data entrada</label><input id="pEntrada" placeholder="dd/mm/aaaa"></div>
-            <div class="field full"><label>Foto Google Drive</label><input id="pFoto" placeholder="https://drive.google.com/file/d/..."></div>
-          </div>
-          <div class="sku-preview">
-            <div>
-              <label>SKU sugerido</label>
-              <code id="skuPreview">-</code>
-            </div>
-            <button type="button" class="btn ghost" onclick="copyText(getGeneratedSku())">Copiar SKU</button>
-          </div>
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <button class="btn dark" type="submit">Adicionar aos rascunhos</button>
-              <button class="btn" type="button" onclick="clearProductForm()">Limpar</button>
-            </div>
-            <p class="hint">O código usa categoria + material + sequência, conferindo os SKUs já existentes e os rascunhos locais.</p>
-          </div>
-        </form>
-      </div>
-
-      <div class="panel" style="margin-top:18px">
+    <section class="section" id="sec-vendas">
+      <div class="panel" style="margin-bottom:18px">
         <div class="toolbar" style="margin-top:0">
-          <h2 style="margin:0">Rascunhos de cadastro</h2>
-          <div class="toolbar-right">
-            <button class="btn small" onclick="copyProductDrafts(false)">Copiar colunas atuais</button>
-            <button class="btn small" onclick="copyProductDrafts(true)">Copiar com SKU</button>
-            <button class="btn small" onclick="downloadProductDrafts()">Baixar CSV</button>
-            <button class="btn small" onclick="clearProductDrafts()">Limpar lote</button>
+          <div>
+            <h2 style="margin:0 0 8px">Dashboard de vendas</h2>
+            <p class="hint" style="margin:0">Baseado no CRM local salvo neste navegador. Quando plugar no Apps Script, este bloco pode ler a aba CRM oficial.</p>
+          </div>
+          <button class="btn small" onclick="copyDormantCustomers()">Copiar clientes em alerta</button>
+        </div>
+        <div class="crm-kpis" id="crmKpis"></div>
+        <div class="crm-split">
+          <div>
+            <h3>Clientes sem compra há +60 dias</h3>
+            <div class="crm-list" id="crmDormant"></div>
+          </div>
+          <div>
+            <h3>Quem mais comprou</h3>
+            <div class="crm-list" id="crmTopCustomers"></div>
           </div>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th>Preço</th><th>Custo</th><th>Estoque</th><th>Entrada</th><th></th></tr></thead><tbody id="draftTable"></tbody></table></div>
       </div>
-    </section>
 
-    <section class="section" id="sec-vendas">
       <div class="grid-2">
         <div class="panel">
           <h2>Registrar venda</h2>
@@ -299,9 +286,9 @@ tr:hover td{background:#fbf3ee}
 
       <div class="panel">
         <div class="toolbar" style="margin-top:0">
-          <h2 style="margin:0">CRM local</h2>
+          <h2 style="margin:0">Histórico do CRM local</h2>
           <div class="toolbar-right">
-            <button class="btn small" onclick="copySalesCRM()">Copiar CRM</button>
+            <button class="btn small" onclick="copySalesCRM()">Copiar compras</button>
             <button class="btn small" onclick="copySaleSheetUpdates()">Copiar atualizações Produtos</button>
             <button class="btn small" onclick="clearSales()">Limpar CRM local</button>
           </div>
@@ -339,25 +326,8 @@ tr:hover td{background:#fbf3ee}
       </div>
     </section>
 
-    <section class="section" id="sec-exportar">
-      <div class="grid-2">
-        <div class="panel">
-          <h2>Linhas de produtos</h2>
-          <p class="hint">Formato atual da planilha: nome, categoria, preço, foto, variações, badge, custo, data_entrada, data_venda, pedido, estoque.</p>
-          <div class="toolbar"><button class="btn dark" onclick="previewProductDrafts(false)">Prévia atual</button><button class="btn" onclick="previewProductDrafts(true)">Prévia com SKU</button></div>
-          <div class="copybox" id="productExportBox">Sem rascunhos por enquanto.</div>
-        </div>
-        <div class="panel">
-          <h2>CRM / vendas</h2>
-          <p class="hint">Crie uma aba nova chamada CRM com essas colunas para guardar cliente, canal e status sem poluir a aba Produtos.</p>
-          <div class="toolbar"><button class="btn dark" onclick="previewSalesCRM()">Prévia CRM</button><button class="btn" onclick="previewSaleUpdates()">Prévia atualização Produtos</button></div>
-          <div class="copybox" id="salesExportBox">Sem vendas locais por enquanto.</div>
-        </div>
-      </div>
-    </section>
-
     <div class="footer-note">
-      Admin V7 funciona como camada operacional sobre a planilha. Para gravação automática no Sheets, o próximo passo ideal é plugar um Apps Script Web App com permissões de escrita.
+      Admin V7 funciona como camada operacional sobre a planilha. Produtos continuam sendo cadastrados direto no Sheets; vendas e CRM ficam no painel até integrarmos o Apps Script.
     </div>
   </main>
 </div>
@@ -369,7 +339,6 @@ const CONFIG = {
 };
 
 const STORAGE = {
-  drafts: 'maya_v7_product_drafts',
   sales: 'maya_v7_sales_crm'
 };
 
@@ -507,16 +476,14 @@ function afterDataChange() {
   seedDates();
   renderDashboard();
   renderProductsTable();
-  renderDrafts();
   renderSalePicker();
   renderCRM();
+  renderSalesDashboard();
   renderRepurchase();
-  updateSkuPreview();
   setNextOrder();
 }
 
 function seedDates() {
-  if (!$('pEntrada').value) $('pEntrada').value = todayBR();
   if (!$('sData').value) $('sData').value = todayBR();
 }
 
@@ -645,17 +612,6 @@ function renderSalesChart(products) {
   });
 }
 
-function getGeneratedSku() {
-  const base = `${categoryCode($('pCategoria').value)}-${materialCode($('pVariacao').value)}`;
-  const drafts = loadLocal(STORAGE.drafts);
-  const existing = new Set([...allProducts.map(p => p.sku ? String(p.sku).trim().toUpperCase() : ''), ...drafts.map(d => d.sku)].filter(Boolean));
-  const sameBaseCount = allProducts.filter(p => `${categoryCode(p.categoria)}-${materialCode(p.variacoes || p.variações)}` === base).length
-    + drafts.filter(d => String(d.sku || '').startsWith(base + '-')).length;
-  let n = sameBaseCount + 1;
-  while (existing.has(`${base}-${String(n).padStart(3,'0')}`)) n++;
-  return `${base}-${String(n).padStart(3,'0')}`;
-}
-
 function productSku(p) {
   if (p.sku) return String(p.sku).trim().toUpperCase();
   const base = `${categoryCode(p.categoria)}-${materialCode(p.variacoes || p.variações)}`;
@@ -663,103 +619,8 @@ function productSku(p) {
   return `${base}-${namePart || '000'}`;
 }
 
-function updateSkuPreview() {
-  if ($('skuPreview')) $('skuPreview').textContent = getGeneratedSku();
-}
-
-['pCategoria','pVariacao','pNome'].forEach(id => document.addEventListener('input', e => { if (e.target && e.target.id === id) updateSkuPreview(); }));
-
-$('productForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const draft = {
-    sku:getGeneratedSku(),
-    nome:$('pNome').value.trim(),
-    categoria:$('pCategoria').value,
-    preco:$('pPreco').value.trim(),
-    foto:$('pFoto').value.trim(),
-    variacoes:$('pVariacao').value.trim(),
-    badge:$('pBadge').value,
-    custo:$('pCusto').value.trim(),
-    data_entrada:$('pEntrada').value.trim() || todayBR(),
-    data_venda:'',
-    pedido:'',
-    estoque:$('pEstoque').value || '1'
-  };
-  if (!draft.nome || !draft.preco) return showToast('Preencha nome e preço.');
-  const drafts = loadLocal(STORAGE.drafts);
-  drafts.push(draft);
-  saveLocal(STORAGE.drafts, drafts);
-  clearProductForm(true);
-  renderDrafts();
-  previewProductDrafts(false);
-  showToast('Produto adicionado ao lote.');
-});
-
-function clearProductForm(keepBasics=false) {
-  ['pNome','pPreco','pFoto'].forEach(id => $(id).value = '');
-  if (!keepBasics) {
-    $('pVariacao').value = '';
-    $('pCusto').value = '';
-    $('pEstoque').value = '1';
-    $('pBadge').value = 'NOVO';
-  }
-  $('pEntrada').value = todayBR();
-  updateSkuPreview();
-}
-
-function renderDrafts() {
-  const drafts = loadLocal(STORAGE.drafts);
-  $('draftTable').innerHTML = drafts.length ? drafts.map((d,i) => `<tr>
-    <td><code>${escapeHtml(d.sku)}</code></td><td><div class="name">${escapeHtml(d.nome)}</div></td><td>${escapeHtml(d.categoria)}</td><td>${brMoney(d.preco)}</td><td>${brMoney(d.custo)}</td><td>${escapeHtml(d.estoque)}</td><td>${escapeHtml(d.data_entrada)}</td><td><button class="btn small" onclick="removeDraft(${i})">Remover</button></td>
-  </tr>`).join('') : '<tr><td colspan="8"><div class="empty">Nenhum rascunho</div></td></tr>';
-}
-
-function removeDraft(i) {
-  const drafts = loadLocal(STORAGE.drafts);
-  drafts.splice(i,1);
-  saveLocal(STORAGE.drafts,drafts);
-  renderDrafts();
-  previewProductDrafts(false);
-}
-
-function clearProductDrafts() {
-  saveLocal(STORAGE.drafts, []);
-  renderDrafts();
-  previewProductDrafts(false);
-}
-
-function productRows(withSku=false) {
-  const drafts = loadLocal(STORAGE.drafts);
-  const headers = withSku ? ['sku','nome','categoria','preço','foto','variações','badge','custo','data_entrada','data_venda','pedido','estoque'] : ['nome','categoria','preço','foto','variações','badge','custo','data_entrada','data_venda','pedido','estoque'];
-  const rows = drafts.map(d => withSku
-    ? [d.sku,d.nome,d.categoria,d.preco,d.foto,d.variacoes,d.badge,d.custo,d.data_entrada,d.data_venda,d.pedido,d.estoque]
-    : [d.nome,d.categoria,d.preco,d.foto,d.variacoes,d.badge,d.custo,d.data_entrada,d.data_venda,d.pedido,d.estoque]);
-  return {headers, rows};
-}
-
 function rowsToTSV(headers, rows) {
   return [headers, ...rows].map(r => r.map(v => String(v ?? '').replace(/\t/g,' ').replace(/\n/g,' ')).join('\t')).join('\n');
-}
-
-function previewProductDrafts(withSku) {
-  const {headers, rows} = productRows(withSku);
-  $('productExportBox').textContent = rows.length ? rowsToTSV(headers, rows) : 'Sem rascunhos por enquanto.';
-}
-
-function copyProductDrafts(withSku) {
-  const {headers, rows} = productRows(withSku);
-  if (!rows.length) return showToast('Não há rascunhos para copiar.');
-  copyText(rowsToTSV(headers, rows));
-}
-
-function downloadProductDrafts() {
-  const {headers, rows} = productRows(true);
-  if (!rows.length) return showToast('Não há rascunhos para baixar.');
-  downloadFile('maya-produtos-rascunho.csv', rowsToCSV(headers, rows));
-}
-
-function rowsToCSV(headers, rows) {
-  return [headers, ...rows].map(r => r.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
 }
 
 function renderSalePicker() {
@@ -803,6 +664,11 @@ function saveSale() {
   const items = selectedSaleProducts();
   if (!items.length) return showToast('Selecione pelo menos uma peça.');
   const subtotal = items.reduce((s,p)=>s+number(p.preco),0);
+  const categoryCount = items.reduce((acc,p) => {
+    const key = catLabel(p.categoria);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
   const sale = {
     id: Date.now(),
     pedido:$('sPedido').value.trim(),
@@ -815,6 +681,9 @@ function saveSale() {
     frete:$('sFrete').value || '0',
     status:$('sStatus').value,
     obs:$('sObs').value.trim(),
+    itemCount: items.length,
+    skuList: items.map(p => productSku(p)).join(' | '),
+    categorySummary: Object.entries(categoryCount).map(([cat,count]) => `${cat}: ${count}`).join(' | '),
     items: items.map(p => ({id:p._id,row:p._row,sku:productSku(p),nome:p.nome,preco:p.preco,categoria:p.categoria})),
     subtotal,
     total: subtotal - number($('sDesconto').value) + number($('sFrete').value)
@@ -826,6 +695,7 @@ function saveSale() {
   resetSaleForm(false);
   renderSalePicker();
   renderCRM();
+  renderSalesDashboard();
   previewSalesCRM();
   showToast('Venda salva no CRM local.');
 }
@@ -847,6 +717,100 @@ function renderCRM() {
   </tr>`).join('') : '<tr><td colspan="7"><div class="empty">Nenhuma venda local</div></td></tr>';
 }
 
+function renderSalesDashboard() {
+  const sales = loadLocal(STORAGE.sales);
+  const customers = buildCustomerStats(sales);
+  const knownCustomers = customers.filter(c => c.name !== 'Cliente não informado');
+  const revenue = sales.reduce((sum, sale) => sum + number(sale.total), 0);
+  const items = sales.reduce((sum, sale) => sum + (sale.items?.length || 0), 0);
+  const avgTicket = sales.length ? revenue / sales.length : 0;
+  const repeaters = knownCustomers.filter(c => c.orders > 1).length;
+  const inactive = knownCustomers.filter(c => c.daysSinceLast !== null && c.daysSinceLast > 60);
+  const topCustomers = [...knownCustomers].sort((a,b) => b.revenue - a.revenue || b.orders - a.orders).slice(0, 8);
+  const topChannel = topEntry(sales.reduce((acc,s) => {
+    const key = s.canal || 'Sem canal';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {}));
+
+  $('crmKpis').innerHTML = `
+    <div class="crm-kpi hot"><div class="label">Vendas CRM</div><div class="value">${sales.length || '-'}</div><div class="sub">${items} peça${items === 1 ? '' : 's'}</div></div>
+    <div class="crm-kpi good"><div class="label">Receita CRM</div><div class="value">${sales.length ? brMoney(revenue) : '-'}</div><div class="sub">ticket ${avgTicket ? brMoney(avgTicket) : '-'}</div></div>
+    <div class="crm-kpi"><div class="label">Clientes</div><div class="value">${knownCustomers.length || '-'}</div><div class="sub">${repeaters} recompraram</div></div>
+    <div class="crm-kpi warn"><div class="label">Alertas 60d</div><div class="value">${inactive.length || '-'}</div><div class="sub">${topChannel ? 'canal top: ' + escapeHtml(topChannel[0]) : 'sem canal'}</div></div>`;
+
+  $('crmDormant').innerHTML = inactive.length
+    ? inactive.sort((a,b) => b.daysSinceLast - a.daysSinceLast).slice(0, 8).map(c => customerCard(c, true)).join('')
+    : '<div class="empty">Nenhum cliente em alerta</div>';
+
+  $('crmTopCustomers').innerHTML = topCustomers.length
+    ? topCustomers.map(c => customerCard(c, false)).join('')
+    : '<div class="empty">Registre vendas com cliente para ver o ranking</div>';
+}
+
+function buildCustomerStats(sales) {
+  const map = {};
+  sales.forEach(sale => {
+    const name = normalizeCustomerName(sale.cliente);
+    const key = norm(name);
+    const date = parseDate(sale.data);
+    map[key] = map[key] || {
+      name,
+      contact: sale.contato || '',
+      orders: 0,
+      items: 0,
+      revenue: 0,
+      lastDate: null,
+      channels: {}
+    };
+    const c = map[key];
+    c.contact = c.contact || sale.contato || '';
+    c.orders += 1;
+    c.items += sale.items?.length || 0;
+    c.revenue += number(sale.total);
+    c.channels[sale.canal || 'Sem canal'] = (c.channels[sale.canal || 'Sem canal'] || 0) + 1;
+    if (date && (!c.lastDate || date > c.lastDate)) c.lastDate = date;
+  });
+  return Object.values(map).map(c => ({
+    ...c,
+    lastDateText: c.lastDate ? c.lastDate.toLocaleDateString('pt-BR') : '-',
+    daysSinceLast: c.lastDate ? Math.floor((new Date() - c.lastDate) / 86400000) : null,
+    topChannel: topEntry(c.channels)?.[0] || '-'
+  }));
+}
+
+function normalizeCustomerName(name) {
+  const clean = String(name || '').trim();
+  return clean || 'Cliente não informado';
+}
+
+function topEntry(obj) {
+  return Object.entries(obj || {}).sort((a,b) => b[1] - a[1])[0] || null;
+}
+
+function customerCard(c, dormant) {
+  const tag = dormant
+    ? `<span class="pill red">${c.daysSinceLast}d sem compra</span>`
+    : `<span class="pill green">${c.orders} pedido${c.orders === 1 ? '' : 's'}</span>`;
+  return `<div class="crm-card">
+    <div>
+      <strong>${escapeHtml(c.name)}</strong>
+      <span>${escapeHtml(c.contact || 'sem contato')} · ${c.items} peça${c.items === 1 ? '' : 's'} · último ${escapeHtml(c.lastDateText)} · ${escapeHtml(c.topChannel)}</span>
+      ${tag}
+    </div>
+    <b>${brMoney(c.revenue)}</b>
+  </div>`;
+}
+
+function copyDormantCustomers() {
+  const customers = buildCustomerStats(loadLocal(STORAGE.sales))
+    .filter(c => c.name !== 'Cliente não informado' && c.daysSinceLast !== null && c.daysSinceLast > 60)
+    .sort((a,b) => b.daysSinceLast - a.daysSinceLast);
+  if (!customers.length) return showToast('Não há clientes em alerta para copiar.');
+  const rows = customers.map(c => [c.name,c.contact,c.daysSinceLast,c.lastDateText,c.orders,c.items,c.revenue,c.topChannel]);
+  copyText(rowsToTSV(['cliente','contato','dias_sem_compra','ultima_compra','pedidos','pecas','receita','canal_top'], rows));
+}
+
 function statusPill(status) {
   const key = norm(status);
   const klass = key.includes('entregue') || key.includes('pago') ? 'green' : key.includes('reserv') ? 'yellow' : 'blue';
@@ -854,8 +818,8 @@ function statusPill(status) {
 }
 
 function salesCRMRows() {
-  const headers = ['pedido','data','cliente','contato','canal','pagamento','status','itens','skus','subtotal','desconto','frete','total','obs'];
-  const rows = loadLocal(STORAGE.sales).map(s => [s.pedido,s.data,s.cliente,s.contato,s.canal,s.pagamento,s.status,s.items.map(i=>i.nome).join(' | '),s.items.map(i=>i.sku).join(' | '),s.subtotal,s.desconto,s.frete,s.total,s.obs]);
+  const headers = ['pedido','data','cliente','contato','canal','pagamento','status','qtd_pecas','subtotal','desconto','frete','total','obs'];
+  const rows = loadLocal(STORAGE.sales).map(s => [s.pedido,s.data,s.cliente,s.contato,s.canal,s.pagamento,s.status,s.itemCount || s.items.length,s.subtotal,s.desconto,s.frete,s.total,s.obs]);
   return {headers, rows};
 }
 
@@ -890,6 +854,7 @@ function copySaleSheetUpdates() {
 function clearSales() {
   saveLocal(STORAGE.sales, []);
   renderCRM();
+  renderSalesDashboard();
   previewSalesCRM();
 }
 
