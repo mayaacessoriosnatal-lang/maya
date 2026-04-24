@@ -97,6 +97,21 @@ body{background:var(--off);color:var(--dark);font-family:'Jost',sans-serif;font-
 .badge-ativo{background:var(--green-pale);color:var(--green);}
 .badge-ultimas{background:var(--yellow-pale);color:var(--yellow);}
 .badge-esgotado{background:var(--red-pale);color:var(--red);}
+.recompra-sim{background:#D4EAD8;color:#2A6A3A;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;display:inline-block;font-weight:500;}
+.recompra-testar{background:#FFF3D4;color:#8A6A00;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;display:inline-block;}
+.recompra-nao{background:#EAD4D4;color:#8A2A2A;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;display:inline-block;}
+.recompra-margem{background:#F0E8E4;color:#7A5A4E;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;display:inline-block;}
+.recompra-nd{color:var(--light);font-size:10px;}
+.campeoes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;}
+.campeao-card{background:var(--white);padding:20px 24px;border-left:3px solid var(--peach);}
+.campeao-rank{font-family:'Georgia',serif;font-size:32px;color:var(--peach-pale);line-height:1;margin-bottom:8px;}
+.campeao-nome{font-size:13px;color:var(--dark);margin-bottom:4px;}
+.campeao-info{font-size:10px;color:var(--mid);}
+.pecas-pedido-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+.pp-item{background:var(--off);padding:12px 16px;text-align:center;}
+.pp-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);margin-bottom:6px;}
+.pp-val{font-family:'Georgia',serif;font-size:20px;color:var(--dark);}
+.pp-meta{font-size:9px;color:var(--mid);margin-top:4px;}
 
 /* MARGEM BAR */
 .margem-wrap{display:flex;align-items:center;gap:10px;}
@@ -296,6 +311,30 @@ tbody td{font-size:12px;color:var(--dark);padding:16px 20px;vertical-align:middl
     </div>
   </div>
 
+  <!-- CAMPEOES DE GIRO -->
+  <div class="section">
+    <div class="section-title">Campeoes de Giro &#9889; <span style="font-size:11px;color:var(--light);font-weight:300;letter-spacing:2px;">vendidos em ate 4 dias</span></div>
+    <div class="campeoes-grid" id="campeoesGrid">
+      <div style="color:var(--light);font-size:11px;">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- LUCRO POR CATEGORIA -->
+  <div class="section">
+    <div class="section-title">Lucro por Categoria</div>
+    <div class="fin-grid">
+      <div class="fin-card">
+        <div class="fin-title">Lucro absoluto + Margem por categoria</div>
+        <div id="lucroCatTabela"></div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-title">Pecas por pedido</div>
+        <div id="pecasPorPedidoInfo"></div>
+        <div class="pecas-pedido-grid" id="pecasPedidoGrid"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- TABELA -->
   <div class="section">
     <div class="section-title">Todos os Produtos</div>
@@ -314,10 +353,11 @@ tbody td{font-size:12px;color:var(--dark);padding:16px 20px;vertical-align:middl
             <th>Entrada</th>
             <th>Venda</th>
             <th>Giro</th>
+            <th>Comprar de novo?</th>
           </tr>
         </thead>
         <tbody id="tabelaProdutos">
-          <tr><td colspan="11"><div class="state-msg"><div class="icon">&#9675;</div><p>Carregando...</p></div></td></tr>
+          <tr><td colspan="12"><div class="state-msg"><div class="icon">&#9675;</div><p>Carregando...</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -341,8 +381,18 @@ const fmtPct = v => isNaN(v) ? '&#8212;' : Math.round(v) + '%';
 
 function parseDate(str) {
   if (!str) return null;
-  if (str.includes('/')) { const [d,m,y] = str.split('/'); return new Date(`${y}-${m}-${d}`); }
-  const d = new Date(str); return isNaN(d) ? null : d;
+  const s = String(str).trim();
+  if (s.includes('/')) {
+    const parts = s.split('/');
+    if (parts.length === 3) {
+      const [d, m, y] = parts;
+      const date = new Date(`${y.trim()}-${m.trim().padStart(2,'0')}-${d.trim().padStart(2,'0')}`);
+      return isNaN(date) ? null : date;
+    }
+  }
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
 }
 
 function parseLine(line) {
@@ -366,7 +416,9 @@ function parseCSV(text) {
     headers.forEach((h,i) => obj[h] = (vals[i]||'').trim());
     if (obj['preco'] === undefined) obj.preco = obj['preço'] || '';
     if (obj['variacoes'] === undefined) obj.variacoes = obj['variações'] || '';
-    obj.estoque = obj.estoque !== undefined && obj.estoque !== '' ? parseInt(obj.estoque) : -1;
+    const estoqueRaw = obj.estoque ?? obj['estoque'] ?? '';
+    const estoqueParsed = parseInt(String(estoqueRaw).trim());
+    obj.estoque = !isNaN(estoqueParsed) ? estoqueParsed : -1;
     return obj;
   }).filter(p => p.nome);
 }
@@ -411,6 +463,8 @@ async function loadData() {
   renderChartVendas(allProducts);
   renderAlertas(allProducts);
   renderInsights(allProducts);
+  renderCampeoes(allProducts);
+  renderLucroCat(allProducts);
   renderTabela(allProducts);
   document.getElementById('lastUpdate').textContent = 'Atualizado as ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
@@ -448,7 +502,10 @@ function renderKPIs(p) {
   const totalPedidos = calcTotalPedidos(vendidos);
 
   // Pecas disponiveis e vendidas
-  const pecasDisponiveis = p.filter(x => x.estoque !== 0 && x.estoque !== -1).length;
+  const pecasDisponiveis = p.filter(x => {
+    const e = x.estoque;
+    return !isNaN(e) && e !== 0 && e !== -1;
+  }).length;
   const pecasVendidas = vendidos.length;
 
   // Vendidas por categoria
@@ -502,7 +559,7 @@ function renderFinanceiro(p) {
 }
 
 function renderChartVendas(p) {
-  const vendidos = p.filter(x => x.estoque === 0 && (x.data_venda || x.data_entrada));
+  const vendidos = p.filter(x => x.estoque === 0 && x.data_venda);
   if (!vendidos.length) {
     if (chartVendasInstance) { chartVendasInstance.destroy(); chartVendasInstance = null; }
     const ctx = document.getElementById('chartVendas').getContext('2d');
@@ -525,7 +582,7 @@ function renderChartVendas(p) {
   }
 
   vendidos.forEach(x => {
-    const dateStr = x.data_venda || x.data_entrada;
+    const dateStr = x.data_venda;
     const d = parseDate(dateStr);
     if (!d || d < inicio) return;
     const key = d.toISOString().split('T')[0];
@@ -642,6 +699,121 @@ function renderInsights(p) {
   document.getElementById('insPotencialDesc').textContent = `Se vender todo o estoque atual`;
 }
 
+function recompraBadge(dias, margem, vendido) {
+  if (!vendido) return '<span class="recompra-nd">em estoque</span>';
+  if (dias === null && margem === null) return '<span class="recompra-nd">sem dados</span>';
+  // Margem baixa tem prioridade
+  if (margem !== null && margem < 45) return '<span class="recompra-margem">So se vender muito</span>';
+  // Regras por giro
+  if (dias !== null) {
+    if (dias <= 7 && margem !== null && margem >= 60) return '<span class="recompra-sim">&#10003; Recomprar</span>';
+    if (dias <= 7) return '<span class="recompra-testar">Testar similar</span>';
+    if (dias <= 20) return '<span class="recompra-testar">Testar similar</span>';
+    if (dias > 20) return '<span class="recompra-nao">&#215; Nao recomprar</span>';
+  }
+  return '<span class="recompra-nd">sem dados</span>';
+}
+
+function renderCampeoes(p) {
+  const vendidos = p.filter(x => x.estoque === 0);
+  const campeoes = vendidos
+    .filter(x => calcGiro(x.data_entrada, x.data_venda) !== null && calcGiro(x.data_entrada, x.data_venda) <= 4)
+    .sort((a,b) => calcGiro(a.data_entrada, a.data_venda) - calcGiro(b.data_entrada, b.data_venda))
+    .slice(0, 9);
+
+  const grid = document.getElementById('campeoesGrid');
+  if (!campeoes.length) {
+    grid.innerHTML = '<div style="color:var(--light);font-size:11px;letter-spacing:2px;">Nenhum produto vendido em ate 4 dias ainda.</div>';
+    return;
+  }
+  grid.innerHTML = campeoes.map((x, i) => {
+    const dias = calcGiro(x.data_entrada, x.data_venda);
+    const margem = calcMargem(x.preco, x.custo);
+    return `<div class="campeao-card">
+      <div class="campeao-rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="campeao-nome">${x.nome}</div>
+      <div class="campeao-info">${dias}d de giro &middot; ${catLabel(x.categoria)}${margem !== null ? ' &middot; ' + fmtPct(margem) + ' margem' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLucroCat(p) {
+  const vendidos = p.filter(x => x.estoque === 0);
+
+  // Lucro por categoria
+  const cats = {};
+  vendidos.forEach(x => {
+    const c = catLabel(x.categoria);
+    if (!cats[c]) cats[c] = { receita: 0, custo: 0, qtd: 0 };
+    cats[c].receita += parseFloat(x.preco) || 0;
+    cats[c].custo += parseFloat(x.custo) || 0;
+    cats[c].qtd += 1;
+  });
+
+  const catList = Object.entries(cats)
+    .map(([c, d]) => ({ cat: c, lucro: d.receita - d.custo, margem: d.receita > 0 ? ((d.receita - d.custo) / d.receita) * 100 : 0, qtd: d.qtd, receita: d.receita }))
+    .sort((a,b) => b.lucro - a.lucro);
+
+  const el = document.getElementById('lucroCatTabela');
+  if (!catList.length) { el.innerHTML = '<div class="alerta-vazio">Sem vendas ainda</div>'; }
+  else {
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;">
+      <thead><tr>
+        <th style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);padding:8px 0;text-align:left;border-bottom:1px solid var(--peach-pale);">Categoria</th>
+        <th style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);padding:8px 0;text-align:right;border-bottom:1px solid var(--peach-pale);">Lucro</th>
+        <th style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);padding:8px 0;text-align:right;border-bottom:1px solid var(--peach-pale);">Margem</th>
+        <th style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);padding:8px 0;text-align:right;border-bottom:1px solid var(--peach-pale);">Pecas</th>
+        <th style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);padding:8px 0;text-align:center;border-bottom:1px solid var(--peach-pale);">Prioridade</th>
+      </tr></thead>
+      <tbody>${catList.map(d => {
+        const prioridade = d.margem >= 60 && d.qtd >= 3 ? '<span class="recompra-sim">&#11088; Alta</span>'
+          : d.margem >= 60 || d.qtd >= 3 ? '<span class="recompra-testar">Media</span>'
+          : '<span class="recompra-nao">Baixa</span>';
+        return `<tr>
+          <td style="padding:10px 0;font-size:12px;border-bottom:1px solid var(--peach-pale);">${d.cat}</td>
+          <td style="padding:10px 0;font-size:12px;text-align:right;color:var(--green);border-bottom:1px solid var(--peach-pale);">${fmt(d.lucro)}</td>
+          <td style="padding:10px 0;font-size:12px;text-align:right;border-bottom:1px solid var(--peach-pale);">${fmtPct(d.margem)}</td>
+          <td style="padding:10px 0;font-size:12px;text-align:right;border-bottom:1px solid var(--peach-pale);">${d.qtd}</td>
+          <td style="padding:10px 0;text-align:center;border-bottom:1px solid var(--peach-pale);">${prioridade}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  // Pecas por pedido
+  const comPedido = vendidos.filter(x => x.pedido && x.pedido.trim());
+  const pedidos = {};
+  comPedido.forEach(x => {
+    const id = x.pedido.trim();
+    pedidos[id] = (pedidos[id] || 0) + 1;
+  });
+  const vals = Object.values(pedidos);
+  const media = vals.length ? vals.reduce((s,v)=>s+v,0) / vals.length : null;
+  const max = vals.length ? Math.max(...vals) : null;
+  const total = vals.length;
+
+  const elInfo = document.getElementById('pecasPorPedidoInfo');
+  elInfo.innerHTML = media ? `<p style="font-size:11px;color:var(--mid);margin-bottom:16px;line-height:1.8;">Baseado em <strong>${total} pedido${total>1?'s':''}</strong> com numero registrado.</p>` : '<p style="font-size:11px;color:var(--light);margin-bottom:16px;">Adicione a coluna "pedido" na planilha para ver.</p>';
+
+  const elGrid = document.getElementById('pecasPedidoGrid');
+  elGrid.innerHTML = `
+    <div class="pp-item">
+      <div class="pp-label">Media</div>
+      <div class="pp-val">${media ? media.toFixed(1) : '&#8212;'}</div>
+      <div class="pp-meta">Meta: 3+</div>
+    </div>
+    <div class="pp-item">
+      <div class="pp-label">Maior pedido</div>
+      <div class="pp-val">${max || '&#8212;'}</div>
+      <div class="pp-meta">pecas</div>
+    </div>
+    <div class="pp-item">
+      <div class="pp-label">Pedidos registrados</div>
+      <div class="pp-val">${total || '&#8212;'}</div>
+      <div class="pp-meta">com numero</div>
+    </div>`;
+}
+
 function gerarSKU(p) {
   if (p.sku && p.sku.trim()) return p.sku.trim().toUpperCase();
   const tipoMap = {'brinco':'BRI','colar':'COL','anel':'ANL','pulseira':'PUL','bolsa':'BOL','kit':'KIT'};
@@ -672,7 +844,7 @@ function giroBadge(dias, vendido) {
 
 function renderTabela(p) {
   if (!p.length) {
-    document.getElementById('tabelaProdutos').innerHTML = '<tr><td colspan="11"><div class="state-msg"><p>Nenhum produto</p></div></td></tr>';
+    document.getElementById('tabelaProdutos').innerHTML = '<tr><td colspan="12"><div class="state-msg"><p>Nenhum produto</p></div></td></tr>';
     return;
   }
   document.getElementById('tabelaProdutos').innerHTML = p.map(x => {
@@ -691,6 +863,7 @@ function renderTabela(p) {
       <td style="font-size:10px;color:var(--mid)">${x.data_entrada||'&#8212;'}</td>
       <td style="font-size:10px;color:var(--mid)">${x.data_venda||'&#8212;'}</td>
       <td>${giroBadge(dias, vendido)}</td>
+      <td>${recompraBadge(dias, margem, vendido)}</td>
     </tr>`;
   }).join('');
 }
