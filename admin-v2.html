@@ -73,6 +73,11 @@ body{background:var(--off);color:var(--dark);font-family:'Jost',sans-serif;font-
 .alerta-item{font-size:12px;color:var(--dark);padding:6px 0;border-bottom:1px solid var(--peach-pale);display:flex;justify-content:space-between;}
 .alerta-item:last-child{border-bottom:none;}
 .alerta-vazio{font-size:11px;color:var(--light);}
+.alerta-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;}
+.alerta-head .alerta-titulo{margin-bottom:0;}
+.alerta-toggle{font-size:8px;letter-spacing:2px;text-transform:uppercase;border:1px solid var(--peach-pale);background:transparent;color:var(--mid);padding:6px 10px;cursor:pointer;font-family:'Jost',sans-serif;white-space:nowrap;}
+.alerta-toggle:hover{border-color:var(--peach);color:var(--peach-deep);}
+.alerta-resumo{font-size:11px;color:var(--mid);margin-bottom:10px;}
 
 /* INSIGHTS */
 .insights-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;}
@@ -259,7 +264,10 @@ tbody td{font-size:12px;color:var(--dark);padding:16px 20px;vertical-align:middl
   <!-- ALERTAS -->
   <div class="alertas">
     <div class="alerta tipo-estoque">
-      <div class="alerta-titulo">&#9888; Ultima unidade</div>
+      <div class="alerta-head">
+        <div class="alerta-titulo">&#9888; Ultima unidade</div>
+        <button class="alerta-toggle" id="toggleUltima" onclick="toggleUltimaUnidade()">Ver todos</button>
+      </div>
       <div id="alertaEstoque"><div class="alerta-vazio">Nenhum produto em alerta</div></div>
     </div>
     <div class="alerta tipo-giro">
@@ -382,16 +390,41 @@ const fmtPct = v => isNaN(v) ? '&#8212;' : Math.round(v) + '%';
 function parseDate(str) {
   if (!str) return null;
   const s = String(str).trim();
+
+  // Google Sheets as vezes devolve datas como Date(2026,3,23)
+  const gviz = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if (gviz) {
+    return new Date(Number(gviz[1]), Number(gviz[2]), Number(gviz[3]));
+  }
+
   if (s.includes('/')) {
     const parts = s.split('/');
     if (parts.length === 3) {
       const [d, m, y] = parts;
-      const date = new Date(`${y.trim()}-${m.trim().padStart(2,'0')}-${d.trim().padStart(2,'0')}`);
+      const yy = y.trim().length === 2 ? '20' + y.trim() : y.trim();
+      const date = new Date(Number(yy), Number(m.trim()) - 1, Number(d.trim()));
       return isNaN(date) ? null : date;
     }
   }
+
   const d = new Date(s);
   return isNaN(d) ? null : d;
+}
+
+function dateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function getVendaDate(x) {
+  const dataVenda = parseDate(x.data_venda);
+  if (dataVenda) return dataVenda;
+
+  // Se o pedido foi registrado, mas a data_venda ainda não foi preenchida,
+  // o painel considera a venda como sendo de hoje para não sumir do registro do dia.
+  const temPedido = x.pedido && String(x.pedido).trim() !== '';
+  if (temPedido) return new Date();
+
+  return null;
 }
 
 function parseLine(line) {
@@ -447,6 +480,7 @@ function isAtivo(x) {
 let chartVendasInstance = null;
 let allProducts = [];
 let periodoAtual = 7;
+let ultimaUnidadeExpanded = false;
 
 function setPeriodo(dias, btn) {
   periodoAtual = dias;
@@ -455,9 +489,14 @@ function setPeriodo(dias, btn) {
   renderChartVendas(allProducts);
 }
 
+function toggleUltimaUnidade() {
+  ultimaUnidadeExpanded = !ultimaUnidadeExpanded;
+  renderAlertas(allProducts);
+}
+
 async function loadData() {
   document.getElementById('lastUpdate').textContent = 'Atualizando...';
-  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.sheetName)}&cacheBust=${Date.now()}`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Erro ao buscar planilha');
@@ -513,7 +552,7 @@ function renderKPIs(p) {
   // Pecas disponiveis e vendidas
   const pecasDisponiveis = p.filter(x => {
     const e = x.estoque;
-    return !isNaN(e) && e !== 0 && e !== -1;
+    return isAtivo(x) && !isNaN(e) && e !== 0 && e !== -1;
   }).length;
   const pecasVendidas = vendidos.length;
 
@@ -568,7 +607,7 @@ function renderFinanceiro(p) {
 }
 
 function renderChartVendas(p) {
-  const vendidos = p.filter(x => isVendido(x) && x.data_venda);
+  const vendidos = p.filter(x => isVendido(x) && getVendaDate(x));
   if (!vendidos.length) {
     if (chartVendasInstance) { chartVendasInstance.destroy(); chartVendasInstance = null; }
     const ctx = document.getElementById('chartVendas').getContext('2d');
@@ -577,24 +616,27 @@ function renderChartVendas(p) {
   }
 
   const hoje = new Date();
+  const datasVenda = vendidos.map(getVendaDate).filter(Boolean);
+  const ultimaDataVenda = datasVenda.length ? new Date(Math.max(...datasVenda.map(d => d.getTime()))) : hoje;
+  const fim = ultimaDataVenda > hoje ? ultimaDataVenda : hoje;
   const dias = periodoAtual === 0 ? 365 : periodoAtual;
-  const inicio = new Date(hoje); inicio.setDate(inicio.getDate() - dias);
+  const inicio = new Date(fim); inicio.setDate(inicio.getDate() - dias);
 
-  // Montar labels de datas
+  // Montar labels de datas ate o maior dia encontrado. Isso evita esconder vendas
+  // quando a planilha tem data_venda de hoje, mas o navegador/cache ainda esta em outro dia.
   const labels = [];
   const dataMap = {};
   for (let i = dias; i >= 0; i--) {
-    const d = new Date(hoje); d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
+    const d = new Date(fim); d.setDate(d.getDate() - i);
+    const key = dateKey(d);
     labels.push(key);
     dataMap[key] = 0;
   }
 
   vendidos.forEach(x => {
-    const dateStr = x.data_venda;
-    const d = parseDate(dateStr);
+    const d = getVendaDate(x);
     if (!d || d < inicio) return;
-    const key = d.toISOString().split('T')[0];
+    const key = dateKey(d);
     if (dataMap[key] !== undefined) dataMap[key] += parseFloat(x.preco) || 0;
   });
 
@@ -609,7 +651,7 @@ function renderChartVendas(p) {
   chartVendasInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels.map(l => { const d = new Date(l); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }),
+      labels: labels.map(formatDateKeyBR),
       datasets: [
         {
           label: 'Receita diaria (R$)',
@@ -653,8 +695,18 @@ function renderChartVendas(p) {
 function renderAlertas(p) {
   const ultimas = p.filter(x => isAtivo(x) && x.estoque === 1);
   const elEst = document.getElementById('alertaEstoque');
+  const toggle = document.getElementById('toggleUltima');
+  const limite = 6;
+  const listaUltimas = ultimaUnidadeExpanded ? ultimas : ultimas.slice(0, limite);
+
+  if (toggle) {
+    toggle.style.display = ultimas.length > limite ? 'inline-block' : 'none';
+    toggle.textContent = ultimaUnidadeExpanded ? 'Reduzir' : `Ver todos (${ultimas.length})`;
+  }
+
   elEst.innerHTML = ultimas.length
-    ? ultimas.map(x => `<div class="alerta-item"><span>${x.nome}</span><span>${catLabel(x.categoria)}</span></div>`).join('')
+    ? `<div class="alerta-resumo">${ultimas.length} produto${ultimas.length>1?'s':''} com ultima unidade${ultimas.length>limite && !ultimaUnidadeExpanded ? ` · mostrando ${limite}` : ''}</div>` +
+      listaUltimas.map(x => `<div class="alerta-item"><span>${x.nome}</span><span>${catLabel(x.categoria)}</span></div>`).join('')
     : '<div class="alerta-vazio">Nenhum produto em alerta &#10003;</div>';
 
   const lentos = p.filter(x => { if (!isAtivo(x)) return false; const d = calcGiro(x.data_entrada, null); return d !== null && d > 20; });
