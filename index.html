@@ -556,12 +556,9 @@ function parseEntrada(str) {
 function renderProducts(filter) {
   currentFilter = filter;
   const list = (filter === 'all' ? allProducts : allProducts.filter(p => p.categoria?.toLowerCase() === filter))
+    .filter(p => p.estoque !== 0)
     .slice().sort((a, b) => {
-      // Esgotados sempre no final
-      const aEsg = a.estoque === 0 ? 1 : 0;
-      const bEsg = b.estoque === 0 ? 1 : 0;
-      if (aEsg !== bEsg) return aEsg - bEsg;
-      // Dentro do mesmo grupo, mais recente primeiro
+      // Mais recente primeiro
       const dA = parseEntrada(a.data_entrada);
       const dB = parseEntrada(b.data_entrada);
       if (dA && dB) return dB - dA;
