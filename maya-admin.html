@@ -393,7 +393,6 @@ function parseDate(str) {
   const d = new Date(s);
   return isNaN(d) ? null : d;
 }
-}
 
 function parseLine(line) {
   const result = [], re = /("([^"]*(?:""[^"]*)*)"|([^,]*))(,|$)/g;
