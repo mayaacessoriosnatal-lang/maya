@@ -144,6 +144,22 @@ tbody td{font-size:12px;color:var(--dark);padding:16px 20px;vertical-align:middl
 .td-nome{font-family:'Georgia',serif;font-size:14px;}
 .td-cat{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);}
 
+
+/* TABLE FILTERS */
+.table-tools{background:var(--white);padding:18px 20px;margin-bottom:12px;display:grid;grid-template-columns:2fr 1fr 1fr 1.3fr auto;gap:10px;align-items:end;}
+.filter-group{display:flex;flex-direction:column;gap:6px;}
+.filter-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--light);}
+.filter-input,.filter-select{width:100%;border:1px solid var(--peach-pale);background:var(--white);color:var(--dark);font-family:'Jost',sans-serif;font-size:12px;padding:11px 12px;outline:none;}
+.filter-input:focus,.filter-select:focus{border-color:var(--peach);}
+.filter-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;}
+.btn-filter{font-size:8px;letter-spacing:2px;text-transform:uppercase;background:none;border:1px solid var(--peach-pale);color:var(--mid);padding:11px 14px;cursor:pointer;font-family:'Jost',sans-serif;white-space:nowrap;}
+.btn-filter:hover{border-color:var(--peach);color:var(--peach-deep);}
+.table-counter{font-size:10px;color:var(--mid);letter-spacing:1px;text-align:right;white-space:nowrap;}
+th.sortable{cursor:pointer;user-select:none;}
+th.sortable:hover{color:var(--white);}
+th.sortable::after{content:' ↕';font-size:9px;color:var(--mid);}
+@media(max-width:900px){.table-tools{grid-template-columns:1fr 1fr;}.filter-actions{justify-content:flex-start}.table-counter{text-align:left;}}
+
 /* EMPTY */
 .state-msg{text-align:center;padding:60px;color:var(--light);}
 .state-msg .icon{font-family:'Georgia',serif;font-size:48px;margin-bottom:16px;opacity:.3;}
@@ -346,21 +362,61 @@ tbody td{font-size:12px;color:var(--dark);padding:16px 20px;vertical-align:middl
   <!-- TABELA -->
   <div class="section">
     <div class="section-title">Todos os Produtos</div>
+    <div class="table-tools">
+      <div class="filter-group">
+        <label class="filter-label" for="filtroBusca">Buscar</label>
+        <input class="filter-input" id="filtroBusca" type="search" placeholder="Nome, SKU, categoria, pedido..." oninput="updateTabelaFiltrada()">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroCategoria">Categoria</label>
+        <select class="filter-select" id="filtroCategoria" onchange="updateTabelaFiltrada()"><option value="">Todas</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroStatus">Status</label>
+        <select class="filter-select" id="filtroStatus" onchange="updateTabelaFiltrada()">
+          <option value="">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="vendido">Vendidos</option>
+          <option value="ultima">Ultima unidade</option>
+          <option value="giro_lento">Giro lento</option>
+          <option value="recomprar">Recomprar</option>
+          <option value="nao_recomprar">Nao recomprar</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroOrdenar">Ordenar por</label>
+        <select class="filter-select" id="filtroOrdenar" onchange="updateTabelaFiltrada()">
+          <option value="entrada_desc">Entrada mais recente</option>
+          <option value="venda_desc">Venda mais recente</option>
+          <option value="margem_desc">Maior margem</option>
+          <option value="lucro_desc">Maior lucro por peca</option>
+          <option value="preco_desc">Maior preco</option>
+          <option value="preco_asc">Menor preco</option>
+          <option value="giro_asc">Giro mais rapido</option>
+          <option value="estoque_desc">Maior estoque</option>
+          <option value="nome_asc">Nome A-Z</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-filter" onclick="resetTabelaFiltros()">Limpar</button>
+        <div class="table-counter" id="tabelaContador">—</div>
+      </div>
+    </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Produto</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('nome_asc')">Produto</th>
             <th>SKU</th>
-            <th>Categoria</th>
-            <th>Preco venda</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('categoria_asc')">Categoria</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('preco_desc')">Preco venda</th>
             <th>Custo</th>
-            <th>Margem</th>
-            <th>Estoque</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('margem_desc')">Margem</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('estoque_desc')">Estoque</th>
             <th>Status</th>
-            <th>Entrada</th>
-            <th>Venda</th>
-            <th>Giro</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('entrada_desc')">Entrada</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('venda_desc')">Venda</th>
+            <th class="sortable" onclick="setTabelaOrdenacao('giro_asc')">Giro</th>
             <th>Comprar de novo?</th>
           </tr>
         </thead>
@@ -519,7 +575,8 @@ async function loadData() {
   renderInsights(allProducts);
   renderCampeoes(allProducts);
   renderLucroCat(allProducts);
-  renderTabela(allProducts);
+  populateTabelaCategorias(allProducts);
+  renderTabela(getTabelaFiltradaOrdenada());
   document.getElementById('lastUpdate').textContent = 'Atualizado as ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
 
@@ -914,7 +971,104 @@ function giroBadge(dias, vendido) {
   return `<span class="giro-aberto">${dias}d em estoque</span>`;
 }
 
+
+function lucroPorPeca(x) {
+  const preco = parseFloat(x.preco) || 0;
+  const custo = parseFloat(x.custo) || 0;
+  return preco - custo;
+}
+
+function getRecompraStatus(x) {
+  const vendido = isVendido(x);
+  if (!vendido) return 'em_estoque';
+  const dias = calcGiro(x.data_entrada, x.data_venda);
+  const margem = calcMargem(x.preco, x.custo);
+  if (margem !== null && margem < 45) return 'so_se_vender_muito';
+  if (dias !== null && dias <= 7 && margem !== null && margem >= 60) return 'recomprar';
+  if (dias !== null && dias <= 20) return 'testar_similar';
+  if (dias !== null && dias > 20) return 'nao_recomprar';
+  return 'sem_dados';
+}
+
+function normalizeText(v) {
+  return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+function populateTabelaCategorias(p) {
+  const select = document.getElementById('filtroCategoria');
+  if (!select) return;
+  const atual = select.value;
+  const cats = [...new Set(p.map(x => catLabel(x.categoria)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  select.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  select.value = cats.includes(atual) ? atual : '';
+}
+
+function getTabelaFiltradaOrdenada() {
+  const busca = normalizeText(document.getElementById('filtroBusca')?.value || '');
+  const categoria = document.getElementById('filtroCategoria')?.value || '';
+  const status = document.getElementById('filtroStatus')?.value || '';
+  const ordem = document.getElementById('filtroOrdenar')?.value || 'entrada_desc';
+
+  let lista = allProducts.filter(x => {
+    const vendido = isVendido(x);
+    const ativo = isAtivo(x);
+    const cat = catLabel(x.categoria);
+    const diasAberto = calcGiro(x.data_entrada, null);
+    const texto = normalizeText([x.nome, gerarSKU(x), x.categoria, cat, x.variacoes, x.badge, x.pedido, x.data_venda].join(' '));
+    if (busca && !texto.includes(busca)) return false;
+    if (categoria && cat !== categoria) return false;
+    if (status === 'ativo' && !ativo) return false;
+    if (status === 'vendido' && !vendido) return false;
+    if (status === 'ultima' && !(ativo && x.estoque === 1)) return false;
+    if (status === 'giro_lento' && !(ativo && diasAberto !== null && diasAberto > 20)) return false;
+    if (status === 'recomprar' && getRecompraStatus(x) !== 'recomprar') return false;
+    if (status === 'nao_recomprar' && getRecompraStatus(x) !== 'nao_recomprar') return false;
+    return true;
+  });
+
+  const dateVal = d => { const parsed = parseDate(d); return parsed ? parsed.getTime() : 0; };
+  const num = v => parseFloat(v) || 0;
+  const giroVal = x => { const d = calcGiro(x.data_entrada, isVendido(x) ? x.data_venda : null); return d === null ? 999999 : d; };
+
+  lista.sort((a,b) => {
+    switch(ordem) {
+      case 'nome_asc': return String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR');
+      case 'categoria_asc': return catLabel(a.categoria).localeCompare(catLabel(b.categoria),'pt-BR') || String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR');
+      case 'preco_desc': return num(b.preco) - num(a.preco);
+      case 'preco_asc': return num(a.preco) - num(b.preco);
+      case 'margem_desc': return (calcMargem(b.preco,b.custo)||0) - (calcMargem(a.preco,a.custo)||0);
+      case 'lucro_desc': return lucroPorPeca(b) - lucroPorPeca(a);
+      case 'estoque_desc': return (b.estoque||0) - (a.estoque||0);
+      case 'giro_asc': return giroVal(a) - giroVal(b);
+      case 'venda_desc': return dateVal(b.data_venda) - dateVal(a.data_venda);
+      case 'entrada_desc':
+      default: return dateVal(b.data_entrada) - dateVal(a.data_entrada);
+    }
+  });
+  return lista;
+}
+
+function updateTabelaFiltrada() {
+  const filtrada = getTabelaFiltradaOrdenada();
+  renderTabela(filtrada);
+}
+
+function resetTabelaFiltros() {
+  ['filtroBusca','filtroCategoria','filtroStatus'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const ord = document.getElementById('filtroOrdenar');
+  if (ord) ord.value = 'entrada_desc';
+  updateTabelaFiltrada();
+}
+
+function setTabelaOrdenacao(ordem) {
+  const el = document.getElementById('filtroOrdenar');
+  if (el) el.value = ordem;
+  updateTabelaFiltrada();
+}
+
 function renderTabela(p) {
+  const contador = document.getElementById('tabelaContador');
+  if (contador) contador.textContent = `${p.length} de ${allProducts.length} produtos`;
   if (!p.length) {
     document.getElementById('tabelaProdutos').innerHTML = '<tr><td colspan="12"><div class="state-msg"><p>Nenhum produto</p></div></td></tr>';
     return;
