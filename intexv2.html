@@ -656,11 +656,11 @@ function renderProducts(filter) {
       <div class="product-image">
         <div class="prod-thumb-inner">
           ${imgUrl
-            ? `<img src="${imgUrl}" alt="${p.nome}" loading="lazy" onclick="openLightbox('${imgUrl}','${p.nome}')" style="cursor:zoom-in;" onerror="this.parentElement.innerHTML='<div class=prod-placeholder-wrap><div class=prod-icon>◉</div><div class=prod-placeholder-text>${p.nome}</div></div>'">`
+            ? `<img src="${imgUrl}" alt="${p.nome}" loading="lazy" style="cursor:pointer;" onerror="this.parentElement.innerHTML='<div class=prod-placeholder-wrap><div class=prod-icon>◉</div><div class=prod-placeholder-text>${p.nome}</div></div>'">`
             : `<div class="prod-placeholder-wrap"><div class="prod-icon">◉</div><div class="prod-placeholder-text">${p.nome}</div></div>`
           }
         </div>
-        ${!esgotado ? `<div class="overlay"><button class="overlay-btn" onclick="addToCart(${idx})">+ Adicionar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">Ver produto</button>` : ''}</div>` : `<div class="overlay" style="opacity:1;background:rgba(42,31,26,.3);"><button class="overlay-btn" onclick="aviseMeWhatsapp('${p.nome.replace(/'/g,"\\'")}')">&#9825; Me avise quando chegar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">Ver produto</button>` : ''}</div>`}
+        ${!esgotado ? `<div class="overlay"><button class="overlay-btn" onclick="event.stopPropagation();addToCart(${idx})">+ Adicionar</button>${imgUrl ? `<button class="overlay-btn" onclick="event.stopPropagation();openProdModal(${idx})" style="margin-top:10px;">Ver produto</button>` : ''}</div>` : `<div class="overlay" style="opacity:1;background:rgba(42,31,26,.3);"><button class="overlay-btn" onclick="event.stopPropagation();aviseMeWhatsapp('${p.nome.replace(/'/g,"\\'")}')">&#9825; Me avise quando chegar</button>${imgUrl ? `<button class="overlay-btn" onclick="event.stopPropagation();openProdModal(${idx})" style="margin-top:10px;">Ver produto</button>` : ''}</div>`}
         ${badgeEstoque || (badge ? `<div class="prod-badge ${isKit?'kit':''}">${badge}</div>` : '')}
       </div>
       <div class="product-info">
