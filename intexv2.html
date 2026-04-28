@@ -829,6 +829,9 @@ const descricaoAuto = (p) => {
 
 const featsAuto = (p) => {
   const cat = p.categoria?.toLowerCase();
+  if (cat === 'necessaire') {
+    return ['Tecido resistente', 'Curadoria Maya', 'Zíper reforçado', 'Uso diário'];
+  }
   const base = ['Liga de alum&iacute;nio', 'Curadoria Maya'];
   if (['brinco','colar','anel','bracelet','pulseira'].includes(cat)) {
     return [...base, 'Uso di&aacute;rio', 'Leve e resistente'];
