@@ -660,7 +660,7 @@ function renderProducts(filter) {
             : `<div class="prod-placeholder-wrap"><div class="prod-icon">◉</div><div class="prod-placeholder-text">${p.nome}</div></div>`
           }
         </div>
-        ${!esgotado ? `<div class="overlay"><button class="overlay-btn" onclick="addToCart(${idx})">+ Adicionar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">&#128247; Ver foto</button>` : ''}</div>` : `<div class="overlay" style="opacity:1;background:rgba(42,31,26,.3);"><button class="overlay-btn" onclick="aviseMeWhatsapp('${p.nome.replace(/'/g,"\\'")}')">&#9825; Me avise quando chegar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">&#128247; Ver foto</button>` : ''}</div>`}
+        ${!esgotado ? `<div class="overlay"><button class="overlay-btn" onclick="addToCart(${idx})">+ Adicionar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">Ver produto</button>` : ''}</div>` : `<div class="overlay" style="opacity:1;background:rgba(42,31,26,.3);"><button class="overlay-btn" onclick="aviseMeWhatsapp('${p.nome.replace(/'/g,"\\'")}')">&#9825; Me avise quando chegar</button>${imgUrl ? `<button class="overlay-btn" onclick="openLightbox('${imgUrl}','${p.nome}')" style="margin-top:10px;">Ver produto</button>` : ''}</div>`}
         ${badgeEstoque || (badge ? `<div class="prod-badge ${isKit?'kit':''}">${badge}</div>` : '')}
       </div>
       <div class="product-info">
