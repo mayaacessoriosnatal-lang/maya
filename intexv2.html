@@ -194,29 +194,37 @@ footer{background:var(--dark);padding:80px 60px 40px;}
 .prod-modal{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;}
 .prod-modal.open{opacity:1;pointer-events:all;}
 .prod-modal-overlay{position:absolute;inset:0;background:rgba(42,31,26,.7);backdrop-filter:blur(6px);}
-.prod-modal-box{position:relative;z-index:2;background:var(--white);width:90vw;max-width:900px;max-height:90vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;transform:translateY(20px);transition:transform .3s ease;}
+.prod-modal-box{position:relative;z-index:2;background:var(--white);width:90vw;max-width:920px;max-height:92vh;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;transform:translateY(20px);transition:transform .3s ease;border-radius:20px;}
 .prod-modal.open .prod-modal-box{transform:translateY(0);}
 .prod-modal-img{aspect-ratio:1;background:var(--peach-pale);position:relative;overflow:hidden;}
-.prod-modal-img img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;transition:transform .4s ease;}
-.prod-modal-img img:hover{transform:scale(1.04);}
-.prod-modal-info{padding:48px 40px;display:flex;flex-direction:column;gap:16px;}
+.prod-modal-img img{width:100%;height:100%;object-fit:cover;transition:opacity .3s ease;}
+.prod-modal-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(42,31,26,.45);color:var(--white);border:none;width:36px;height:36px;font-size:16px;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;transition:background .2s;border-radius:50%;}
+.prod-modal-arrow:hover{background:var(--peach);}
+.prod-modal-arrow.prev{left:12px;}
+.prod-modal-arrow.next{right:12px;}
+.prod-modal-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;}
+.prod-modal-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45);border:none;cursor:pointer;padding:0;transition:background .2s;}
+.prod-modal-dot.active{background:var(--white);}
+.prod-modal-info{padding:40px 36px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:92vh;}
 .prod-modal-sku{font-size:8px;letter-spacing:5px;text-transform:uppercase;color:var(--light);}
 .prod-modal-cat{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--peach);}
-.prod-modal-nome{font-family:'Georgia',serif;font-size:32px;color:var(--dark);line-height:1.2;}
-.prod-modal-preco{font-family:'Georgia',serif;font-size:28px;color:var(--peach-deep);}
+.prod-modal-nome{font-family:'Georgia',serif;font-size:26px;color:var(--dark);line-height:1.2;}
+.prod-modal-preco{font-family:'Georgia',serif;font-size:24px;color:var(--peach-deep);}
+.prod-modal-desc-label{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--light);}
 .prod-modal-desc{font-size:12px;color:var(--mid);line-height:2;}
 .prod-modal-vars{display:flex;flex-wrap:wrap;gap:8px;}
-.prod-modal-var{font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:8px 16px;border:1px solid var(--peach-pale);color:var(--mid);background:none;cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s;}
+.prod-modal-var{font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:7px 14px;border:1px solid var(--peach-pale);color:var(--mid);background:none;cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s;border-radius:6px;}
 .prod-modal-var.active,.prod-modal-var:hover{background:var(--peach);border-color:var(--peach);color:var(--white);}
-.prod-modal-add{width:100%;background:var(--dark);color:var(--white);border:none;padding:18px;font-size:10px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;font-weight:300;margin-top:auto;transition:background .2s;}
+.prod-modal-add{width:100%;background:var(--dark);color:var(--white);border:none;padding:16px;font-size:10px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;font-weight:300;margin-top:auto;transition:background .2s;border-radius:10px;}
 .prod-modal-add:hover{background:var(--peach);}
-.prod-modal-close{position:absolute;top:16px;right:16px;background:var(--dark);color:var(--white);border:none;width:36px;height:36px;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;}
-.prod-modal-share{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--light);text-align:center;padding:8px;cursor:pointer;background:none;border:none;font-family:'Jost',sans-serif;transition:color .2s;}
+.prod-modal-close{position:absolute;top:14px;right:14px;background:rgba(42,31,26,.55);color:var(--white);border:none;width:32px;height:32px;font-size:14px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .2s;}
+.prod-modal-close:hover{background:var(--dark);}
+.prod-modal-share{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--light);text-align:center;padding:6px;cursor:pointer;background:none;border:none;font-family:'Jost',sans-serif;transition:color .2s;}
 .prod-modal-share:hover{color:var(--peach);}
-.prod-modal-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.prod-modal-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .prod-modal-feat{font-size:10px;color:var(--mid);display:flex;align-items:center;gap:6px;}
 .prod-modal-feat::before{content:'✦';color:var(--peach);font-size:8px;}
-@media(max-width:768px){.prod-modal-box{grid-template-columns:1fr;width:95vw;}.prod-modal-img{aspect-ratio:4/3;}.prod-modal-info{padding:28px 24px;}}
+@media(max-width:768px){.prod-modal-box{grid-template-columns:1fr;width:96vw;border-radius:14px;}.prod-modal-img{aspect-ratio:4/3;}.prod-modal-info{padding:24px 20px;max-height:60vh;}}
 
 /* LIGHTBOX */
 .lightbox{position:fixed;inset:0;background:rgba(42,31,26,.92);z-index:4000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;backdrop-filter:blur(8px);}
@@ -471,6 +479,9 @@ src="https://www.facebook.com/tr?id=4681163305539876&ev=PageView&noscript=1"
     <button class="prod-modal-close" onclick="closeProdModal()">✕</button>
     <div class="prod-modal-img">
       <img id="modalImg" src="" alt="">
+      <button class="prod-modal-arrow prev" id="modalPrev" onclick="modalNavFoto(-1)">&#8592;</button>
+      <button class="prod-modal-arrow next" id="modalNext" onclick="modalNavFoto(1)">&#8594;</button>
+      <div class="prod-modal-dots" id="modalDots"></div>
     </div>
     <div class="prod-modal-info">
       <div class="prod-modal-sku" id="modalSku"></div>
@@ -478,6 +489,7 @@ src="https://www.facebook.com/tr?id=4681163305539876&ev=PageView&noscript=1"
       <div class="prod-modal-nome" id="modalNome"></div>
       <div class="prod-modal-preco" id="modalPreco"></div>
       <div class="prod-modal-vars" id="modalVars"></div>
+      <div class="prod-modal-desc-label">Sobre a peça</div>
       <div class="prod-modal-desc" id="modalDesc"></div>
       <div class="prod-modal-feats" id="modalFeats"></div>
       <button class="prod-modal-add" id="modalAddBtn" onclick="modalAddToCart()">+ Adicionar ao carrinho</button>
@@ -797,18 +809,20 @@ function aviseMeWhatsapp(nomeProduto) {
 // ── Modal Produto ────────────────────────────────────────────────
 let modalIdx = null;
 let modalVarSelecionada = null;
+let modalFotos = [];
+let modalFotoIdx = 0;
 
 const descricaoAuto = (p) => {
   const cat = p.categoria?.toLowerCase();
   const vars = p.variacoes ? p.variacoes.split(',').map(v=>v.trim()).filter(Boolean) : [];
   const matStr = vars.length ? vars.join(' e ') : 'acabamento dourado';
   const descs = {
-    brinco: `Brinco leve e vers&aacute;til, em ${matStr}. Pe&ccedil;a cuidadosamente selecionada para o dia a dia &mdash; combina com looks casuais e formais. Material em liga de alum&iacute;nio com acabamento resistente.`,
-    colar: `Colar delicado em ${matStr}. Ideal para compor looks do cotidiano ou ocasiões especiais. Pe&ccedil;a &uacute;nica da curadoria Maya &mdash; selecionada a dedo para voc&ecirc;.`,
+    brinco: `Brinco leve e vers&aacute;til, em ${matStr}. Pe&ccedil;a selecionada para o dia a dia &mdash; combina com looks casuais e formais. Material em liga de alum&iacute;nio com acabamento resistente.`,
+    colar: `Colar delicado em ${matStr}. Ideal para compor looks do cotidiano ou ocasi&otilde;es especiais. Pe&ccedil;a &uacute;nica da curadoria Maya.`,
     anel: `Anel em ${matStr}. Design contempor&acirc;neo que se adapta a diferentes estilos. Pe&ccedil;a leve, resistente e de uso di&aacute;rio.`,
-    bracelet: `Bracelete em ${matStr}. Pe&ccedil;a que valoriza qualquer look &mdash; use sozinha ou em conjunto para um estilo mais ousado.`,
-    pulseira: `Pulseira em ${matStr}. Vers&aacute;til e elegante, ideal para usar no dia a dia ou em ocasiões especiais.`,
-    necessaire: `Necessaire selecionada pela curadoria Maya. Pr&aacute;tica, bonita e ideal para organizar seus acess&oacute;rios.`,
+    bracelet: `Bracelete em ${matStr}. Pe&ccedil;a que valoriza qualquer look &mdash; use sozinha ou em conjunto.`,
+    pulseira: `Pulseira em ${matStr}. Vers&aacute;til e elegante, ideal para usar no dia a dia ou em ocasi&otilde;es especiais.`,
+    necessaire: `Necessaire selecionada pela curadoria Maya. Pr&aacute;tica e bonita para organizar seus acess&oacute;rios.`,
   };
   return descs[cat] || `Pe&ccedil;a selecionada pela curadoria Maya. Em ${matStr}. Leve, resistente e ideal para o uso di&aacute;rio.`;
 };
@@ -822,43 +836,71 @@ const featsAuto = (p) => {
   return [...base, 'Qualidade garantida', 'Entrega r&aacute;pida'];
 };
 
+function modalSetFoto(idx) {
+  if (!modalFotos.length) return;
+  modalFotoIdx = (idx + modalFotos.length) % modalFotos.length;
+  const img = document.getElementById('modalImg');
+  img.style.opacity = '0';
+  setTimeout(() => { img.src = modalFotos[modalFotoIdx]; img.style.opacity = '1'; }, 150);
+  document.querySelectorAll('.prod-modal-dot').forEach((d,i) => d.classList.toggle('active', i === modalFotoIdx));
+}
+
+function modalNavFoto(dir) { modalSetFoto(modalFotoIdx + dir); }
+
 function openProdModal(idx) {
   const p = allProducts[idx];
   if (!p) return;
   modalIdx = idx;
 
-  const imgUrl = driveUrl(p.foto);
+  // Montar galeria: coluna foto + coluna fotos separadas por |
+  const foto1 = driveUrl(p.foto);
+  const fotosExtra = p.fotos ? p.fotos.split('|').map(f => driveUrl(f.trim())).filter(Boolean) : [];
+  modalFotos = [foto1, ...fotosExtra].filter(Boolean);
+  modalFotoIdx = 0;
+
   const vars = p.variacoes ? p.variacoes.split(',').map(v=>v.trim()).filter(Boolean) : [];
   modalVarSelecionada = vars[0] || null;
 
-  // Atualizar URL
+  // URL
   const sku = p.sku || p.nome.toLowerCase().replace(/\s+/g,'-');
   history.pushState({}, '', `?produto=${encodeURIComponent(sku)}`);
 
-  // Preencher modal
+  // Preencher
   document.getElementById('modalSku').textContent = p.sku || '';
   document.getElementById('modalCat').textContent = catLabel(p.categoria);
   document.getElementById('modalNome').textContent = p.nome;
   document.getElementById('modalPreco').textContent = fmt(p.preco);
-  document.getElementById('modalDesc').innerHTML = descricaoAuto(p);
 
-  // Imagem
+  // Descrição: planilha tem prioridade
+  document.getElementById('modalDesc').innerHTML = p.descricao && p.descricao.trim()
+    ? p.descricao.trim()
+    : descricaoAuto(p);
+
+  // Foto principal
   const imgEl = document.getElementById('modalImg');
-  if (imgUrl) { imgEl.src = imgUrl; imgEl.style.display='block'; }
+  if (modalFotos.length) { imgEl.src = modalFotos[0]; imgEl.style.display='block'; imgEl.style.opacity='1'; }
   else imgEl.style.display='none';
 
+  // Dots
+  const dotsEl = document.getElementById('modalDots');
+  dotsEl.innerHTML = modalFotos.length > 1
+    ? modalFotos.map((_,i) => `<button class="prod-modal-dot${i===0?' active':''}" onclick="modalSetFoto(${i})"></button>`).join('')
+    : '';
+
+  // Setas
+  document.getElementById('modalPrev').style.display = modalFotos.length > 1 ? 'flex' : 'none';
+  document.getElementById('modalNext').style.display = modalFotos.length > 1 ? 'flex' : 'none';
+
   // Variações
-  const varsEl = document.getElementById('modalVars');
-  varsEl.innerHTML = vars.map((v,i) => `<button class="prod-modal-var${i===0?' active':''}" onclick="selectModalVar(this,'${v}')">${v}</button>`).join('');
+  document.getElementById('modalVars').innerHTML = vars.map((v,i) => `<button class="prod-modal-var${i===0?' active':''}" onclick="selectModalVar(this,'${v}')">${v}</button>`).join('');
 
   // Features
   document.getElementById('modalFeats').innerHTML = featsAuto(p).map(f=>`<div class="prod-modal-feat">${f}</div>`).join('');
 
-  // Botão
   document.getElementById('modalAddBtn').textContent = '+ Adicionar ao carrinho';
 
-  // GA
   if (typeof gtag !== 'undefined') gtag('event', 'view_item', { item_name: p.nome, item_category: p.categoria });
+  if (typeof fbq !== 'undefined') fbq('track', 'ViewContent', { content_name: p.nome, value: parseFloat(p.preco)||0, currency: 'BRL' });
 
   document.getElementById('prodModal').classList.add('open');
   document.body.style.overflow = 'hidden';
